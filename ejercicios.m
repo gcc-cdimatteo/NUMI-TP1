@@ -35,12 +35,15 @@ function ejercicio_B();
   endwhile
   disp(suma)
 
+  disp(""),disp("¿Verifica la ley 26.910?"),disp("")
+  
+  disp(["Suma (%)" "\t|\t" "Mes/Año" "\t" "Verifica?"]),disp("----------------------------------")
   for k = 1:rows(suma)
-    disp((suma(k,1)/datos2(k,3))*100)
+    suma_k =num2str((suma(k,1)/datos2(k,3))*100);
     if suma(k,1)/datos2(k,3) <= 0.08
-      disp(datos2(k,2)),disp("/"),disp(datos2(k,1)),disp("No Verifica la ley 26.910")
+      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t" "NO"])
     else 
-         disp(datos2(k,2)),disp("/"),disp(datos2(k,1)),disp("Verifica la ley 26.910")
+      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t\t" "SI"])
     endif
   endfor
 endfunction
