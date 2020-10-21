@@ -1,3 +1,4 @@
+
 a = "";
 
 function ejercicio_A();
@@ -18,74 +19,139 @@ function ejercicio_A();
   endfor
 endfunction
 
+
 function ejercicio_B();
-  datos1 = load('EnergiasRenovablesSimple.dat');
-  datos2 = load('DemandaSimple.dat');
-
-  i = 1;
-  j = 1;
-  while i <= rows(datos1)
-    suma(j,1) = datos1(i,6);
-    i = i + 1 ;
-    while i <= rows(datos1) && datos1(i,1) == datos1(i-1,1) && datos1(i,2) == datos1(i-1,2) 
-      suma(j,1) = suma(j,1) + datos1(i,6);
-      i = i + 1
-    endwhile
-    j = j + 1;
-  endwhile
-  disp(suma)
-
-  disp(""),disp("Â¿Verifica la ley 26.910?"),disp("")
   
-  disp(["Suma (%)" "\t|\t" "Mes/AÃ±o" "\t" "Verifica?"]),disp("----------------------------------")
-  for k = 1:rows(suma)
-    suma_k =num2str((suma(k,1)/datos2(k,3))*100);
-    if suma(k,1)/datos2(k,3) <= 0.08
-      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t" "NO"])
+##  datos1 = load('EnergiasRenovablesSimple.dat');
+##  datos2 = load('DemandaSimple.dat');
+##  
+##  i = 1;
+##  j = 1;
+##  n=rows(datos1)
+##  while i <= n
+##    suma(j,1) = datos1(i,6);
+##    i = i + 1 ;
+##    while i <= n && datos1(i,1) == datos1(i-1,1) && datos1(i,2) == datos1(i-1,2) 
+##      suma(j,1) = suma(j,1) + datos1(i,6);
+##      i = i + 1;
+##    endwhile
+##    j = j + 1;
+##  endwhile
+##  disp(suma)
+
+  ofe = load('EnergiasRenovablesSimple.dat');
+  dem = load('DemandaSimple.dat');
+  n = rows(ofe);
+  year  = ofe(1:n,1);
+  month = ofe(1:n,2);
+  pow   = ofe(1:n,6);
+  
+  pow_men = [year(1) month(1) pow(1)];
+  j=1;
+  for i = 2:n;
+    date = [year(i) month(i)];
+    if ( date(1)!= pow_men(j,1) || date(2)!= pow_men(j,2))
+      j+=1;
+      pow_men(j,1:2)= date;
+    endif
+    pow_men(j,3) += pow(i);
+  endfor
+  disp("")
+  disp("Oferta energética mensual"),disp("---------------------------------------------------")
+  disp(["Año" "\t|\t" "Mes" "\t|\t" "Energía [GWh]"]),disp("---------------------------------------------------")
+  for i=1:j;
+    text=pow_men(i,:);
+    disp([num2str(text(1)) "\t|\t" num2str(text(2)) "\t|\t" num2str(text(3))])
+  endfor
+
+  disp(""),disp("¿Verifica la ley 26.910?"),disp("")
+  
+  disp(["Oferta / demanda (%)" " | " "Año/Mes" " | " "Verifica?"]),disp("---------------------------------------------------")
+  
+  n_mes=rows(pow_men);
+  total_SI=0;
+  for j = 1:n_mes;
+    pow_men_100  = num2str(round((pow_men(j,3)/dem(j,3))*10000)/100);
+    date = [num2str(dem(j,1)) " / " num2str(dem(j,2))];
+    if pow_men(j,3)/dem(j,3) <= 0.08
+      disp(horzcat([pow_men_100 "\t|\t"],date,["\t|\t" "NO"]))
     else 
-      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t\t" "SI"])
+      disp(horzcat([pow_men_100 "\t|\t"],date,["\t|\t\t" "SI"]))
+      total_SI+=1;
     endif
   endfor
+  disp("---------------------------------------------------")
+  disp("")
+  disp(["Se cumplió con la ley en " num2str(total_SI) " de " num2str(n_mes) " meses."]),disp("")
 endfunction
 
 function ejercicio_C();
-  datos1 = load('EnergiasRenovablesSimple.dat');
-  datos2 = load('DemandaSimple.dat');
-
-
-  i = 1;
-  j = 1;
-  while i <= rows(datos1)
-    if datos1(i,4) == 4 || datos1(i,4) == 5
-      suma(j,1) = datos1(i,6);
-      i = i + 1 ;
-    elseif
-      i = (( i + 1 )); %Le puse parentesis xq me tiraba un error
-      suma(j,1) = 0;
-    endif
-    while i <= rows(datos1) && datos1(i,1) == datos1(i-1,1) 
-      if datos1(i,4) == 4 || datos1(i,4) == 5
-        suma(j,1) = suma(j,1) + datos1(i,6);
-        i = i + 1;
-      elseif
-        i = (( i + 1 ));
-       endif
-    endwhile
-    j = j + 1;
-  endwhile
-
-  for k = 2:rows(suma)
-    porcentaje(k,1) = suma(k,1)/suma(k-1,1);
-  endfor
-
-  disp("suma")
-  disp(suma)
-  disp("---------")
-  disp("porcentaje")
-  disp(porcentaje)
+  
+##  En este ejercicio habia un par de endif´s que no le pusieron condicion,
+##  y por eso tiraba error en el command window y pedia parentesis. 
+##  Solo habia que cambiarlos por else.
+  
+  ofe = load('EnergiasRenovablesSimple.dat');
+  dem = load('DemandaSimple.dat');
+  
+  en_Eol  = pow_an_tipo(4,ofe)(:,2);
+  en_Hid  = pow_an_tipo(5,ofe)(:,2);
+  en_Tot  = demanda_anual(dem)(:,2);
+  years   = demanda_anual(dem)(:,1);
+  n_mes   = rows(en_Tot);
+  
+  Data = round(horzcat(en_Eol,en_Eol./en_Tot*100,en_Hid,en_Hid./en_Tot*100,(en_Eol.+en_Hid),(en_Eol.+en_Hid)./en_Tot*100,en_Tot)*100)/100;
+  titulos=["Año\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eoli+Hidra\t" "Eoli+Hidra (%)\t" "En Total"];
+  disp(titulos)
+  Data=horzcat(years,Data);
+  num2str(Data)
+  
 endfunction
 
+function res = pow_an_tipo(cod,ofe) 
+##  Esta funcion devuelve una matriz de nx2 = [año_j oferta_anual] 
+##  para el tipo que se especifique segun el código:
+##    1    BIODIESEL
+##    2    BIOGAS
+##    3    BIOMASA
+##    4    EOLICO
+##    5    HIDRO <=50MW
+##    6    SOLAR  
+n = rows(ofe);
+year  = ofe(1:n,1);
+pow   = ofe(1:n,6);
+tipo  = ofe(1:n,4);
+res = [year(1) 0];
+j=1;
+for i = 1:n;
+  date = [year(i)];
+  if ( date(1)!= res(j,1))
+    j+=1;
+    res(j,1)= date;
+  endif
+  if ( tipo(i)==cod )
+        res(j,2) += pow(i);
+  endif
+endfor
+endfunction
+
+function res = demanda_anual(dem)
+##  Esta funcion devuelve una matriz de 2xn = [año_j demanda_anual]
+  n     = rows(dem);
+  year  = dem(:,1);
+  res   = [year(1) 0];
+  j=1;
+for i = 1:n;
+  date = [year(i)];
+  if ( date(1)!= res(j,1))
+    j+=1;
+    res(j,1)= date;
+  endif
+  res(j,2)+= dem(i,3);
+endfor
+endfunction
 function ejercicio_D();
+  
   datos1 = load('EnergiasRenovablesSimple.dat');
   datos2 = load('DemandaSimple.dat');
 
@@ -199,36 +265,40 @@ function ejercicio_D();
 endfunction
 
 function ejercicio_E();
+  
 endfunction
 
 function ejercicio_F();
+  
 endfunction
 
 function ejercicio_G();
+  
+  
 endfunction
 
 function main()
-  printf("----------Ejercicio A----------\n");
-  ejercicio_A();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio B----------\n");
-  ejercicio_B();
-  printf("-------------------------------\n");
+##  printf("----------Ejercicio A----------\n");
+##  ejercicio_A();
+##  printf("-------------------------------\n");
+##  printf("----------Ejercicio B----------\n");
+##  ejercicio_B();
+##  printf("-------------------------------\n");
   printf("----------Ejercicio C----------\n");
   ejercicio_C();
   printf("-------------------------------\n");
-  printf("----------Ejercicio D----------\n");
-  ejercicio_D();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio E----------\n");
-  ejercicio_E();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio F----------\n");
-  ejercicio_F();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio G----------\n");
-  ejercicio_G();
-  printf("-------------------------------\n");
+##  printf("----------Ejercicio D----------\n");
+##  ejercicio_D();
+##  printf("-------------------------------\n");
+##  printf("----------Ejercicio E----------\n");
+##  ejercicio_E();
+##  printf("-------------------------------\n");
+##  printf("----------Ejercicio F----------\n");
+##  ejercicio_F();
+##  printf("-------------------------------\n");
+##  printf("----------Ejercicio G----------\n");
+##  ejercicio_G();
+##  printf("-------------------------------\n");
 endfunction
 
 main();
