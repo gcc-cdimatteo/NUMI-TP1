@@ -10,8 +10,11 @@ function ejercicio_A();
   #EnergiasRenovables
   [ER_mes, ER_CentMaq, ER_Fuente, ER_Region, ER_EnGenerada] = textread("EnergiasRenovables.dat", "%s %s %d %d %f", "headerlines", 1);
   for i = 1:rows(ER_Fuente);
-    if i == 1 printf("%s  %s  %s  %s  %s\n", "Mes", "CentMaq", "Fuente", "Region", "EnGenerada"); endif
-    printf("%s  %s  %d  %d  %f\n", char(ER_mes(i, 1)), char(ER_CentMaq(i, 1)), ER_Fuente(i, 1), ER_Region(i, 1), ER_EnGenerada(i, 1));
+    if i == 1 printf("%s %s %s %s %s \n", "Mes", "CentMaq", "Fuente", "Region", "EnGenerada [GWh]"); endif
+    #printf("%s  %s  %d  %d  %f\n", char(ER_mes(i, 1)), char(ER_CentMaq(i, 1)), ER_Fuente(i, 1), ER_Region(i, 1), ER_EnGenerada(i, 1));
+    text= num2str([ER_Fuente(i, 1) ER_Region(i, 1) ER_EnGenerada(i, 1)]);
+    text= horzcat([char(ER_mes(i, 1)) "\t" char(ER_CentMaq(i, 1)) "\t"],text);
+    disp(text)
   endfor
 endfunction
 
@@ -32,12 +35,15 @@ function ejercicio_B();
   endwhile
   disp(suma)
 
+  disp(""),disp("¿Verifica la ley 26.910?"),disp("")
+  
+  disp(["Suma (%)" "\t|\t" "Mes/Año" "\t" "Verifica?"]),disp("----------------------------------")
   for k = 1:rows(suma)
-    disp((suma(k,1)/datos2(k,3))*100)
+    suma_k =num2str((suma(k,1)/datos2(k,3))*100);
     if suma(k,1)/datos2(k,3) <= 0.08
-      disp(datos2(k,2)),disp("/"),disp(datos2(k,1)),disp("No Verifica la ley 26.910")
+      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t" "NO"])
     else 
-         disp(datos2(k,2)),disp("/"),disp(datos2(k,1)),disp("Verifica la ley 26.910")
+      disp([suma_k "\t|\t" num2str(datos2(k,2)) "/" num2str(datos2(k,1)) "\t\t\t" "SI"])
     endif
   endfor
 endfunction
