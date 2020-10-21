@@ -100,11 +100,31 @@ function ejercicio_C();
   years   = demanda_anual(dem)(:,1);
   n_mes   = rows(en_Tot);
   
-  Data = round(horzcat(en_Eol,en_Eol./en_Tot*100,en_Hid,en_Hid./en_Tot*100,(en_Eol.+en_Hid),(en_Eol.+en_Hid)./en_Tot*100,en_Tot)*100)/100;
+  Data = round(horzcat(years,en_Eol,en_Eol./en_Tot*100,en_Hid,en_Hid./en_Tot*100,(en_Eol.+en_Hid),(en_Eol.+en_Hid)./en_Tot*100,en_Tot)*100)/100;
   titulos=["Año\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eoli+Hidra\t" "Eoli+Hidra (%)\t" "En Total"];
   disp(titulos)
-  Data=horzcat(years,Data);
   num2str(Data)
+  
+  subplot (2, 1, 1)
+    plot(years,Data(:,2),"r*-",years,Data(:,4),"b*-",years,Data(:,6),"g*-");
+    title("Consumo anual de energía eólica e hidraulica")
+    axis([2011 2020])
+    grid on
+    xlabel("Año")
+    ylabel("Consumo anual [GWh]")
+    legend("Eolica","Hidraulica","Eolica + Hidraulica",'location','north')
+  subplot (2, 1, 2)
+    plot(years,Data(:,3),"r*-",years,Data(:,5),"b*-",years,Data(:,7),"g*-");
+    axis([2011 2020])
+    grid on
+    xlabel("Año")
+    ylabel("Consumo respecto al total  [%] ")
+    legend("Eolica","Hidraulica","Eolica + Hidraulica",'location','north')
+
+##  Totales = plot(years,Data(:,2),"r*-",years,Data(:,4),"b*-",years,Data(:,6),"g*-")
+##  Porcentajes = plot(years,Data(:,3),"r*-",years,Data(:,5),"b*-",years,Data(:,7),"g*-")
+  
+  
   
 endfunction
 
