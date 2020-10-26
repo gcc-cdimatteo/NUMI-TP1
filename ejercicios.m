@@ -43,16 +43,16 @@ function ejercicio_B();
     pow_men(j,3) += pow(i);
   endfor
   disp("")
-  disp("Oferta energética mensual"),disp("---------------------------------------------------")
-  disp(["Año" "\t|\t" "Mes" "\t|\t" "Energía [GWh]"]),disp("---------------------------------------------------")
+  disp("Oferta energÃ©tica mensual"),disp("---------------------------------------------------")
+  disp(["AÃ±o" "\t|\t" "Mes" "\t|\t" "EnergÃ­a [GWh]"]),disp("---------------------------------------------------")
   for i=1:j;
     text=pow_men(i,:);
     disp([num2str(text(1)) "\t|\t" num2str(text(2)) "\t|\t" num2str(text(3))])
   endfor
 
-  disp(""),disp("¿Verifica la ley 26.910?"),disp("")
+  disp(""),disp("Â¿Verifica la ley 26.910?"),disp("")
   
-  disp(["Oferta / demanda (%)" " | " "Año/Mes" " | " "Verifica?"]),disp("---------------------------------------------------")
+  disp(["Oferta / demanda (%)" " | " "AÃ±o/Mes" " | " "Verifica?"]),disp("---------------------------------------------------")
   
   n_mes=rows(pow_men);
   total_SI=0;
@@ -69,14 +69,14 @@ function ejercicio_B();
   endfor
   disp("---------------------------------------------------")
   disp("")
-  disp(["Se cumplió con la ley en " num2str(total_SI) " de " num2str(n_mes) " meses."]),disp("")
+  disp(["Se cumpliÃ³ con la ley en " num2str(total_SI) " de " num2str(n_mes) " meses."]),disp("")
   
   csvwrite("Ej_B.csv",pow_men)
 endfunction
 
 function ejercicio_C();
 
-#  En este ejercicio habia un par de endif´s que no le pusieron condicion,
+#  En este ejercicio habia un par de endifÂ´s que no le pusieron condicion,
 #  y por eso tiraba error en el command window y pedia parentesis. 
 #  Solo habia que cambiarlos por else.
   
@@ -91,7 +91,7 @@ function ejercicio_C();
   
   Data = round(horzcat(years,en_Eol,en_Eol./en_Tot*100,en_Hid,en_Hid./en_Tot*100,(en_Eol.+en_Hid),(en_Eol.+en_Hid)./en_Tot*100,en_Tot)*100)/100;
   csvwrite("Ej_C.csv",Data)
-  titulos=["Año\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eoli+Hidra\t" "Eoli+Hidra (%)\t" "En Total"];
+  titulos=["AÃ±o\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eoli+Hidra\t" "Eoli+Hidra (%)\t" "En Total"];
   disp(titulos)
   num2str(Data)
   
@@ -101,28 +101,28 @@ function ejercicio_C();
   figure(1)
   subplot (2, 1, 1)
     bar(years,horzcat(Data(:,2),Data(:,4)));
-    title("Consumo anual de energía eólica e hidraulica")
+    title("Consumo anual de energÃ­a eÃ³lica e hidraulica")
     axis(xlim)
     grid on
-    xlabel("Año")
+    xlabel("AÃ±o")
     ylabel("Consumo anual [GWh]")
     legend(fig_tit,'location','northeastoutside')
   subplot (2, 1, 2)
     bar(years,horzcat(Data(:,3),Data(:,5),Data(:,7)));
     axis(xlim)
     grid on
-    xlabel("Año")
+    xlabel("AÃ±o")
     ylabel("Consumo respecto al total  [%] ")
     legend(fig_tit,'location','northeastoutside')
-  filename = "Ej_A.jpg"
+  filename = "Ej_C.jpg"
   print(filename)  
     
 endfunction
 
 function res = pow_an(col,cod,ofe) 
 ##  Esta funcion se usa en C,D...
-##  Esta funcion devuelve una matriz de nx2 = [año_j oferta_anual] 
-##  para el tipo/region que se especifique segun los códigos:
+##  Esta funcion devuelve una matriz de nx2 = [aÃ±o_j oferta_anual] 
+##  para el tipo/region que se especifique segun los cÃ³digos:
 
 ## tipo => col=4 --- region => col=5
 
@@ -163,7 +163,7 @@ endfunction
 
 
 function res = demanda_anual(dem)
-#  Esta funcion devuelve una matriz de 2xn = [año_j demanda_anual]
+#  Esta funcion devuelve una matriz de 2xn = [aÃ±o_j demanda_anual]
   n     = rows(dem);
   year  = dem(:,1);
   res   = [year(1) 0];
@@ -179,7 +179,7 @@ endfor
 endfunction
 
 function res = oferta_anual_xtipoyreg(ofe,tipo,reg)
-#  Esta funcion devuelve una matriz de 2xn = [año_j demanda_anual]
+#  Esta funcion devuelve una matriz de 2xn = [aÃ±o_j demanda_anual]
 #  del tipo de energia segun el codigo.
   n     = rows(ofe);
   year  = ofe(:,1);
@@ -220,7 +220,7 @@ function ejercicio_D();
     Reg_Tip{2,region} = horzcat(years,En_T_R_per);
     
     disp("---------------------")
-    disp(["La oferta de energía anual en " tit_reg_largo{region} " por tipo de energía fue de:"])
+    disp(["La oferta de energÃ­a anual en " tit_reg_largo{region} " por tipo de energÃ­a fue de:"])
     disp("(de izquierda a derecha segun codigo de tipo)"),disp("")
     num2str(Reg_Tip{1,region}),disp("")
     disp("la misma como porcentaje de todos los tipos en la region")
@@ -241,14 +241,14 @@ function ejercicio_D();
     title(["Consumo anual por tipo en " tit_reg_largo{region} " [GWh]"])
     axis(xlim)
     grid on
-    xlabel("Año")
+    xlabel("AÃ±o")
     ylabel("Consumo anual [GWh]")
     legend(tipos_tit,'location',"northeastoutside")
       subplot (2, 1, 2)
       bar(X_per(:,1),X_per(:,2:7),0.9,'stacked')
     axis(horzcat(xlim,[0 100]))
     grid on
-    xlabel("Año")
+    xlabel("AÃ±o")
     ylabel("Consumo respecto al total regional [%] ")
     legend(tipos_tit,'location',"northeastoutside")
 
@@ -422,8 +422,8 @@ endfunction
 
 function res = pow_an_(col,cod,ofe,year) 
 ##  Esta funcion se usa en C,D...
-##  Esta funcion devuelve la oferta del año year del tipo/region especificado. 
-##  para el tipo/region que se especifique segun los códigos:
+##  Esta funcion devuelve la oferta del aÃ±o year del tipo/region especificado. 
+##  para el tipo/region que se especifique segun los cÃ³digos:
 ##  el argumento cod se debe pasar como una lista [cod1 cod2 ...]
 ## tipo => col=4 --- region => col=5
 
