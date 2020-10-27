@@ -163,13 +163,17 @@ endfunction
 
 function ejercicio_F();
   oferta = load('EnergiasRenovablesSimple.dat');
-  energia = sumatoriaPorClave(oferta, [ 4 ], [ 6 ]); # [ fuente aporteTotal aportePorcentual ]
-  total = sum(energia(:,2));
-  for i = 1:rows(energia)
-    energia(i,3) = energia(i,2)/total*100;
+  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]) # [ anio mes fuente aporteTotal ]
+  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]) # [ anio fuente aporteTotal ]
+  for i = 1:rows(energiaMensual)
+    anio = energiaMensual(i,1);
+    fuente = energiaMensual(i,3);
+    aporteMensual = energiaMensual(i,4);
+    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 3 ]);
+    energiaMensual(i,5) = aporteMensual/energiaAnual(pos,3)*100; # [ anio mes fuente aporteTotal porcentajeAnual ]
   endfor
-  energia = sortrows(energia, [1]);
-  disp(energia);
+  energiaMensual = sortrows(energiaMensual, [1, 2]);
+  disp(energiaMensual);
 endfunction
 
 function ejercicio_G()
