@@ -144,7 +144,7 @@ function ejercicio_C();
   xlabel("Anio")
   ylabel("Consumo respecto al total  [%] ")
   legend(fig_tit,'location','northeastoutside')
-  filename = "out/Ej_A.jpg"
+  filename = "out/Ej_A.jpg";
   print(filename);
 endfunction
 
@@ -202,27 +202,27 @@ function ejercicio_G()
 endfunction
 
 function main()
-#  printf("----------Ejercicio A----------\n");
-#  ejercicio_A();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio B----------\n");
-#  ejercicio_B();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio C----------\n");
+  printf("----------Ejercicio A----------\n");
+  ejercicio_A();
+  printf("-------------------------------\n");
+  printf("----------Ejercicio B----------\n");
+  ejercicio_B();
+  printf("-------------------------------\n");
+  printf("----------Ejercicio C----------\n");
   ejercicio_C();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio D----------\n");
-#  ejercicio_D();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio E----------\n");
-#  ejercicio_E();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio F----------\n");
-#  ejercicio_F();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio G----------\n");
-#  ejercicio_G();
-#  printf("-------------------------------\n");
+  printf("-------------------------------\n");
+  printf("----------Ejercicio D----------\n");
+  ejercicio_D();
+  printf("-------------------------------\n");
+  printf("----------Ejercicio E----------\n");
+  ejercicio_E();
+  printf("-------------------------------\n");
+  printf("----------Ejercicio F----------\n");
+  ejercicio_F();
+  printf("-------------------------------\n");
+  printf("----------Ejercicio G----------\n");
+  ejercicio_G();
+  printf("-------------------------------\n");
 endfunction
 
 main()
