@@ -163,17 +163,13 @@ endfunction
 
 function ejercicio_F();
   oferta = load('EnergiasRenovablesSimple.dat');
-  totalAnual = sumatoriaPorClave(oferta, [ 1 ], [6]); # [ anio aporteTotal ]
-  totalMensual = sumatoriaPorClave(oferta, [1 2], [6]); # [ anio mes aporteTotal ]
-  tot = sum(totalAnual(:,2));
-  for i = 1:rows(totalAnual)
-    totalAnual(i,3) = totalAnual(i,2)*100/tot; # [ anio aporteTotal porcentajeAnual ]
+  energia = sumatoriaPorClave(oferta, [ 4 ], [ 6 ]); # [ fuente aporteTotal aportePorcentual ]
+  total = sum(energia(:,2));
+  for i = 1:rows(energia)
+    energia(i,3) = energia(i,2)/total*100;
   endfor
-  for i = 1:rows(totalMensual)
-    anio = totalMensual(i,1);
-    pos = existeEnMatriz(totalAnual, [ anio ], [ 1 ]); #Si pos == -1 hay un error de datos
-    totalMensual(i,4) = 100*totalMensual(i,3)/totalAnual(pos,2); # [ anio mes aporteTotal porcentajeMensual ]
-  endfor
+  energia = sortrows(energia, [1]);
+  disp(energia);
 endfunction
 
 function ejercicio_G()
@@ -202,27 +198,27 @@ function ejercicio_G()
 endfunction
 
 function main()
-  printf("----------Ejercicio A----------\n");
-  ejercicio_A();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio B----------\n");
-  ejercicio_B();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio C----------\n");
-  ejercicio_C();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio D----------\n");
-  ejercicio_D();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio E----------\n");
-  ejercicio_E();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio F----------\n");
+#  printf("----------Ejercicio A----------\n");
+#  ejercicio_A();
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio B----------\n");
+#  ejercicio_B();
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio C----------\n");
+#  ejercicio_C();
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio D----------\n");
+#  ejercicio_D();
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio E----------\n");
+#  ejercicio_E();
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio F----------\n");
   ejercicio_F();
-  printf("-------------------------------\n");
-  printf("----------Ejercicio G----------\n");
-  ejercicio_G();
-  printf("-------------------------------\n");
+#  printf("-------------------------------\n");
+#  printf("----------Ejercicio G----------\n");
+#  ejercicio_G();
+#  printf("-------------------------------\n");
 endfunction
 
 main()
