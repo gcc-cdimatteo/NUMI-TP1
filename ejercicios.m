@@ -223,11 +223,22 @@ function ejercicio_D();
       endfor
       REGION(:,1+j+6*(i-1)) = res;
   endfor
+##  la matriz REGION tiene su primer columna los años y en las columnas 2:19,
+##  esta dividida en tres submatrices correspondientes a ls tres regiones 
+##  con el aporte de cada una de los tipos de energia.
   
   DATA{1,1}   =REGION(:,1);
   DATA{1,i+1} =REGION(:,(1+6*(i-1)).+(1:6));
   DATA;
 
+##  DATA es un cellarray con el mismo formato que explique
+##  para REGION de la forma 
+##                      {years reg1 reg2 reg3}
+##  durante el proximo loop le agrego en la segunda fila las
+##  matrices porcentuales, quedando DATA asi de la forma
+##                    {years reg1 reg2 reg3
+##                     years por1 por2 por3}
+ 
   endfor
   csvwrite("out/Ej_D.csv",REGION)
   
