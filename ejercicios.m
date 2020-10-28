@@ -4,7 +4,17 @@ a = "";
 ##
 function res=roundn(x,n)
   res = round(n*x)/n;
-endfunction  
+endfunction 
+
+function res=completar_nulos_sort(matriz,columnaFiltro,columnaSumatoria,valores)
+  for val=valores
+    n=rows(matriz);
+    if (any(matriz(:,columnaFiltro) == val) == 0)
+      matriz(n+1,[columnaFiltro,columnaSumatoria])=[val 0];
+    endif
+  endfor
+  res=sortrows(matriz,columnaFiltro);
+endfunction 
 
 ## Devuelve una matriz (n+m)*k siendo n la cantidad de columnas de "columnasFiltro" 
 ## y m la cantidad de columnas de "columasSumatoria".
@@ -264,6 +274,8 @@ function ejercicio_D();
     Y_per =DATA{2,region+1};
     
 ##  GRAPHING
+
+
     tipos_tit={"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
     xlim=[2010.5 2020.5];
     figure(1+region)
@@ -291,9 +303,81 @@ endfunction
 
 function ejercicio_E()
   oferta = load('EnergiasRenovablesSimple.dat');
-  ofertaFiltrada = filtradoPorValor(oferta, [2011;2019], [ 1 ]); #Filtro la oferta in anios = [2011,2019]
-  aportesAnualesFuente = sumatoriaPorClave(ofertaFiltrada, [ 1 4 ], [ 6 ]); # [ anio fuente aporteTotal ]
-  aportesAnualesRegion = sumatoriaPorClave(ofertaFiltrada, [ 1 5 ], [ 6 ]); # [ anio region aporteTotal ]
+  oferta2011 = filtradoPorValor(oferta, [2011], [ 1 ]);
+  FUENTE2011 = sumatoriaPorClave(oferta2011, [ 1 4 ], [ 6 ])(:,2:3);
+  REGION2011 = sumatoriaPorClave(oferta2011, [ 1 5 ], [ 6 ])(:,2:3);
+  oferta2019 = filtradoPorValor(oferta, [2019], [ 1 ]);
+  FUENTE2019 = sumatoriaPorClave(oferta2019, [ 1 4 ], [ 6 ])(:,2:3);
+  REGION2019 = sumatoriaPorClave(oferta2019, [ 1 5 ], [ 6 ])(:,2:3);
+  
+  DATA={FUENTE2011 FUENTE2019;REGION2011 REGION2019};
+  
+  valores = {1:6;101:108};
+  for i=1:2
+    for j=1:2
+      DATA{i,j}=completar_nulos_sort(DATA{i,j},1,2,valores{i,:});
+    endfor
+  endfor  
+  
+  TIPO       = cell2mat(horzcat(DATA(1,:)))(:,[2,4]);
+  REGION     = cell2mat(horzcat(DATA(2,:)))(:,[2,4]);
+  TIPO,REGION
+  TIPO_porcentual   = roundn(TIPO  ./sum(TIPO  )*100,2);
+  REGION_porcentual = roundn(REGION./sum(REGION)*100,2);
+  TIPO_porcentual,REGION_porcentual
+
+  csvwrite("out/Ej_E_TIPO.csv",TIPO);
+  csvwrite("out/Ej_E_REGION.csv",REGION);
+  csvwrite("out/Ej_E_TIPO_por.csv",TIPO_porcentual);
+  csvwrite("out/Ej_E_REGION_por.csv",REGION_porcentual);
+
+##  GRAPHING
+  tit_reg = {"BS AS";"CENTRO";"COMAHUE";"CUYO";"LITORAL";"NOR-ES";"NOR-OES";"PATAG"};
+  cod_reg = 101:108 ;
+  tit_tip = {"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
+  cod_tip = 1:6;
+  
+      years={"2011";"2019"};
+  figure(5)
+    subplot(2,1,1)
+      bar(cod_tip',TIPO(:,1:2))
+      title("Oferta de energia por tipo en todas las regiones en 2011 y 2019 [GWh]")
+      axis([0.5 6.5])
+      grid on
+      ylabel("[GWh]")
+      legend(years,'location',"northeastoutside")
+      set(gca,"xticklabel",tit_tip)
+    subplot(2,1,2)
+      bar(cod_tip',TIPO_porcentual(:,1:2))
+      title("Oferta de energia [%] por tipo de todas las regiones en 2011 y 2019")
+      axis([0.5 6.5])
+      grid on
+      ylabel("[%]")
+      legend(years,'location',"northeastoutside")
+      set(gca,"xticklabel",tit_tip)
+
+  figure(6)      
+    subplot(2,1,1)
+      bar(cod_reg.-100',REGION(:,1:2))
+      title("Oferta de energia por region de todos los tipos en 2011 y 2019 [GWh]")
+      axis([0.5 8.5])
+      grid on
+      ylabel("[GWh]")
+      legend(years,'location',"northeastoutside")
+      set(gca,"xticklabel",tit_reg)
+      
+    subplot(2,1,2)
+      bar(cod_reg.-100',REGION_porcentual(:,1:2))
+      title("Oferta de energia [%] por region de todos los tipos en 2011 y 2019")
+      axis([0.5 8.5])
+      grid on
+      ylabel("[%]")
+      legend(years,'location',"northeastoutside")
+      set(gca,"xticklabel",tit_reg)
+      
+      print(5,"out/Ej_E_tipo.jpg")
+      print(6,"out/Ej_E_region.jpg")
+  
 endfunction
 
 function ejercicio_F();
@@ -342,15 +426,15 @@ function main()
 ##  disp("----------Ejercicio C----------\n");
 ##  ejercicio_C();
 ##  disp("-------------------------------\n");
-  disp("----------Ejercicio D----------\n");
-  ejercicio_D();
-  disp("-------------------------------\n");
+##  disp("----------Ejercicio D----------\n");
+##  ejercicio_D();
+##  disp("-------------------------------\n");
 ##  disp("----------Ejercicio E----------\n");
 ##  ejercicio_E();
 ##  disp("-------------------------------\n");
-##  disp("----------Ejercicio F----------\n");
-##  ejercicio_F();
-##  disp("-------------------------------\n");
+  disp("----------Ejercicio F----------\n");
+  ejercicio_F();
+  disp("-------------------------------\n");
 ##  disp("----------Ejercicio G----------\n");
 ##  ejercicio_G();
 ##  disp("-------------------------------\n");
