@@ -13,23 +13,26 @@ endfunction
 ## las columnas representadas en "matriz" por los valores de "columnasFiltro".
 function res = sumatoriaPorClave(matriz, columnasFiltro, columnasSumatoria)
   res = [];
-  columnas = [];
-  for i = 1:columns(columnasFiltro) columnas(1,i) = i; endfor
+##  columnas = [];
+##  for i = 1:columns(columnasFiltro) columnas(1,i) = i; endfor
+  columnas = 1:columns(columnasFiltro);
   j = 1;
   for i = 1:rows(matriz)
-    valores = [];
-    for k = 1:columns(columnasFiltro)
-      valores(1,k) = matriz(i,columnasFiltro(1,k));
-    endfor
+##    valores = [];
+##    for k = 1:columns(columnasFiltro)
+##      valores(1,k) = matriz(i,columnasFiltro(1,k));
+##    endfor
+    valores = matriz(i,columnasFiltro);
     pos = existeEnMatriz(res, valores, columnas);
     if pos != -1
       for k = 1:columns(columnasSumatoria)
         res(pos,columns(columnasFiltro)+k) += matriz(i,columnasSumatoria(1,k));
       endfor
     else
-      for k = 1:columns(columnasFiltro)
-        res(j, columnas(1,k)) = matriz(i,columnasFiltro(1,k));
-      endfor
+##      for k = 1:columns(columnasFiltro)
+##        res(j, columnas(1,k)) = matriz(i,columnasFiltro(1,k));
+##      endfor
+      res(j,1:columns(columnasFiltro))=matriz(i,columnasFiltro);
       for k = 1:columns(columnasSumatoria)
         res(j, columns(columnasFiltro)+k) = matriz(i,columnasSumatoria(1,k));
       endfor
@@ -103,47 +106,88 @@ function ejercicio_B();
     anio = energiaMensual(i,1);
     mes = energiaMensual(i,2);
     pos = existeEnMatriz(demanda, [ anio mes ], [ 1 2 ]); #Si pos == -1 hay un error de datos
-    energiaMensual(i,4) = energiaMensual(i,3)/demanda(pos,3);
-    energiaMensual(i,5) = (energiaMensual(i,4) <= 0.08);
+    energiaMensual(i,4) = energiaMensual(i,3)/demanda(pos,3)*100;#### ACA PUSE EL PORCENTAJE EN 100 ####
+    energiaMensual(i,5) = (energiaMensual(i,4) <= 8);
   endfor
+  csvwrite("out/Ej_B.csv",energiaMensual)
+  
+##  PRINTING
+  printf("%s\t|\t%s\t|\t%s\t|\t%s\t|\t%s\t|\t\n","Anio","Mes","En [GWh]","En [%]","Cumple ley?"),
+  disp("----------------------------------------------------------------------")
+  printf("%4i\t|\t%2i\t|\t%.1f\t\t|\t%.2f\t|\t%i\n",energiaMensual'),
+  disp("----------------------------------------------------------------------")
+  cumple=sum(energiaMensual(:,5)==0);
+  n_mes =rows(energiaMensual);
+  printf("Se cumple con  la ley en %i de %i meses (%.1f%%)\n",cumple,n_mes,cumple/n_mes*100),
+  disp("")
+  
+##  GRAPHING
+  i=1:n_mes;
+  xlim=[1 n_mes];
+  xlab=strcat("t1 = ene2011  ; t",num2str(n_mes)," = ago2020");
+  figure(1)
+  subplot (2, 1, 1)
+    plot(i,energiaMensual(:,3));
+    title("Consumo mensual de energia renovable ")
+    axis(xlim)
+    grid on
+##    xlabel(xlab)
+    ylabel("[GWh]")
+  subplot (2, 1, 2)
+    plot(i,energiaMensual(:,4),"r-");
+    title("Consumo mensual de energia renovable respecto de la energia total")
+    axis(xlim)
+    grid on
+    xlabel(xlab)
+    ylabel("[%]")
+  filename = "out\Ej_B.jpg";
+  print(filename)
+  
 endfunction
 
 function ejercicio_C();
   oferta = load('EnergiasRenovablesSimple.dat');
   demanda = load('DemandaSimple.dat');
   
+  energiaTotal_ = sumatoriaPorClave(oferta, [ 1 ], [ 6 ]);
+  years=energiaTotal_(:,1);energiaTotal=energiaTotal_(:,2);#Defino EnergiaTotal como el total de energia RENOVABLE anual de todas las fuentes.
   ofertaFiltrada = filtradoPorValor(oferta, [4;5], [ 4 ]); #Filtro la oferta por fuente == 4 || fuente == 5
   oferta = sortrows(sumatoriaPorClave(ofertaFiltrada, [ 1 4 ], [ 6 ]), [2, 1]); # [ anio fuente aporteTotal ] -> sort fuente asc anio asc
   energiaEolica = filtradoPorValor(oferta, [ 4 ], [ 2 ])(:,3); #Filtro la energia por fuente == 4
   energiaHidraulica = filtradoPorValor(oferta, [ 5 ], [ 2 ])(:,3); #Filtro la energia por fuente == 5
-  demandaAnual = sumatoriaPorClave(demanda, [ 1 ], [ 3 ]); # [ anio demandaTotal ]
-  energiaTotal = demandaAnual(:,2); 
-  years = demandaAnual(:,1);
+##  demandaAnual = sumatoriaPorClave(demanda, [ 1 ], [ 3 ]); # [ anio demandaTotal ]
   
-  Data = round(horzcat(years,energiaEolica,energiaEolica./energiaTotal*100,energiaHidraulica,energiaHidraulica./energiaTotal*100,(energiaEolica.+energiaHidraulica),(energiaEolica.+energiaHidraulica)./energiaTotal*100,energiaTotal)*100)/100;
-  csvwrite("out/Ej_C.csv",Data)
-  titulos=["Anio\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eoli+Hidra\t" "Eoli+Hidra (%)\t" "En Total"];
-  disp(titulos);
-  num2str(Data);
-  #  Graficos
-  fig_tit={"Eolica";"Hidraulica";"Eolica + Hidraulica"};
-  xlim=[2010.5 2020.5]
+  Data = roundn(horzcat(years,energiaEolica,energiaEolica./energiaTotal*100,energiaHidraulica,energiaHidraulica./energiaTotal*100,energiaEolica.+energiaHidraulica,energiaTotal),2);
+##  csvwrite("out/Ej_C.csv",Data)
+  
+##  PRINTING
+
+  titulos=["Anio\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eol+Hid\t" "En Total"];
+##  printf("%4s\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t\n",titulos),
+##  disp(titulos)
+  printf("%s | %s | %s | %s | %s | %s | %s\n",titulos'),disp("")
+  disp("----------------------------------------------------------------------")
+  printf("%4i  %9.1f  %9.1f  %9.1f  %9.1f  %9.1f  %9.1f\n",Data'),
+  disp("----------------------------------------------------------------------")
+  
+##  GRAPHING
+  fig_tit={"Eolica";"Hidraulica"};
+  xlim=[2010.5 2020.5];
   figure(1)
   subplot (2, 1, 1)
   bar(years,horzcat(Data(:,2),Data(:,4)));
   title("Consumo anual de energia eolica e hidraulica")
   axis(xlim)
   grid on
-  xlabel("Anio")
-  ylabel("Consumo anual [GWh]")
+  ylabel("[GWh]")
   legend(fig_tit,'location','northeastoutside');
   subplot (2, 1, 2)
-  bar(years,horzcat(Data(:,3),Data(:,5),Data(:,7)));
+  bar(years,horzcat(Data(:,3),Data(:,5)),0.9,'stacked');
+  title("Consumo respecto al total de todas las fuentes")
   axis(xlim)
   grid on
-  xlabel("Anio")
-  ylabel("Consumo respecto al total  [%] ")
-  legend(fig_tit,'location','northeastoutside')
+  ylabel("[%]")
+  legend(fig_tit{1:2},'location','northeastoutside')
   filename = "out/Ej_A.jpg";
   print(filename);
 endfunction
@@ -152,6 +196,16 @@ function ejercicio_D();
   oferta = load('EnergiasRenovablesSimple.dat');
   ofertaAnualFiltrada = filtradoPorValor(oferta, [101;104;108], [ 5 ]); #Filtro la oferta in region = [101,104,108]
   ofertaAnual = sumatoriaPorClave(ofertaAnualFiltrada, [1 4 5], [6]); ## [ anio fuente region aporteTotal ]
+  ofertaAnual
+  
+  tit_reg = {"BA";"CU";"PA"};
+  tit_reg_largo={"Buenos Aires";"Cuyo";"Patagonia"};
+  cod_reg = [101 104 108];
+  cod_tip = 1:6;
+  
+  
+
+  
 endfunction
 
 function ejercicio_E()
@@ -163,17 +217,13 @@ endfunction
 
 function ejercicio_F();
   oferta = load('EnergiasRenovablesSimple.dat');
-  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]) # [ anio mes fuente aporteTotal ]
-  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]) # [ anio fuente aporteTotal ]
-  for i = 1:rows(energiaMensual)
-    anio = energiaMensual(i,1);
-    fuente = energiaMensual(i,3);
-    aporteMensual = energiaMensual(i,4);
-    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 3 ]);
-    energiaMensual(i,5) = aporteMensual/energiaAnual(pos,3)*100; # [ anio mes fuente aporteTotal porcentajeAnual ]
+  energia = sumatoriaPorClave(oferta, [ 4 ], [ 6 ]); # [ fuente aporteTotal aportePorcentual ]
+  total = sum(energia(:,2));
+  for i = 1:rows(energia)
+    energia(i,3) = energia(i,2)/total*100;
   endfor
-  energiaMensual = sortrows(energiaMensual, [1, 2]);
-  disp(energiaMensual);
+  energia = sortrows(energia, [1]);
+  disp(energia);
 endfunction
 
 function ejercicio_G()
@@ -202,27 +252,27 @@ function ejercicio_G()
 endfunction
 
 function main()
-#  printf("----------Ejercicio A----------\n");
-#  ejercicio_A();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio B----------\n");
-#  ejercicio_B();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio C----------\n");
-#  ejercicio_C();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio D----------\n");
-#  ejercicio_D();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio E----------\n");
-#  ejercicio_E();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio F----------\n");
-  ejercicio_F();
-#  printf("-------------------------------\n");
-#  printf("----------Ejercicio G----------\n");
-#  ejercicio_G();
-#  printf("-------------------------------\n");
+##  disp("----------Ejercicio A----------\n");
+##  ejercicio_A();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio B----------\n");
+##  ejercicio_B();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio C----------\n");
+##  ejercicio_C();
+##  disp("-------------------------------\n");
+  disp("----------Ejercicio D----------\n");
+  ejercicio_D();
+  disp("-------------------------------\n");
+##  disp("----------Ejercicio E----------\n");
+##  ejercicio_E();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio F----------\n");
+##  ejercicio_F();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio G----------\n");
+##  ejercicio_G();
+##  disp("-------------------------------\n");
 endfunction
 
 main()
