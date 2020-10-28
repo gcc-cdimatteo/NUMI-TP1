@@ -196,14 +196,84 @@ function ejercicio_D();
   oferta = load('EnergiasRenovablesSimple.dat');
   ofertaAnualFiltrada = filtradoPorValor(oferta, [101;104;108], [ 5 ]); #Filtro la oferta in region = [101,104,108]
   ofertaAnual = sumatoriaPorClave(ofertaAnualFiltrada, [1 4 5], [6]); ## [ anio fuente region aporteTotal ]
-  ofertaAnual
   
   tit_reg = {"BA";"CU";"PA"};
   tit_reg_largo={"Buenos Aires";"Cuyo";"Patagonia"};
   cod_reg = [101 104 108];
   cod_tip = 1:6;
   
+  tot_  = sumatoriaPorClave(ofertaAnual,[1],[4]);
+  years = tot_(:,1);TOTAL = tot_(:,2);##  la oferta total de las tres regiones
   
+  REGION = years;
+  for i=1:columns(cod_reg);
+    region=cod_reg(i);
+    for j=1:columns(cod_tip);
+      tipo=cod_tip(j);
+      date=ofertaAnual(1,1);
+      jdate=1;res=0*(1:rows(years))';
+      for fila = 1:rows(ofertaAnual);
+        if (ofertaAnual(fila,1)!=date)
+          date=ofertaAnual(fila,1);
+          jdate+=1;
+        endif
+        if (ofertaAnual(fila,2)==tipo && ofertaAnual(fila,3)==region);
+          res(jdate)+=ofertaAnual(fila,4);
+        endif
+      endfor
+      REGION(:,1+j+6*(i-1)) = res;
+  endfor
+  
+  DATA{1,1}   =REGION(:,1);
+  DATA{1,i+1} =REGION(:,(1+6*(i-1)).+(1:6));
+  DATA;
+
+  endfor
+  csvwrite("out/Ej_D.csv",REGION)
+  
+  for region = 1:columns(cod_reg);
+    reg = cod_reg(region);
+    reg_abs = DATA{1,region+1};
+    tot_reg = sum(reg_abs');
+    reg_por = roundn(reg_abs./tot_reg'.*100,4);
+    DATA{2,1}=DATA{1,1};DATA{2,region+1}=reg_por;
+    
+    disp("---------------------")
+    disp(["La oferta de energía anual en " tit_reg_largo{region} " por tipo de energía fue de:"])
+    disp("(de izquierda a derecha segun codigo de tipo)"),disp("")
+    num2str(horzcat(DATA{1,1},reg_abs)),disp("")
+    disp("la misma como porcentaje de todos los tipos en la region")
+    num2str(horzcat(DATA{1,1},reg_por)),disp("")
+    disp("---------------------")
+    csvwrite(strcat("out/Ej_D_",tit_reg{region},".csv"),horzcat(DATA{1,1},reg_abs))
+    csvwrite(strcat("out/Ej_D_",tit_reg{region},"_[%].csv"),horzcat(DATA{1,1},reg_por))
+    
+    X     =DATA{1,1};
+    Y     =DATA{1,region+1};
+    Y_per =DATA{2,region+1};
+    
+##  GRAPHING
+    tipos_tit={"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
+    xlim=[2010.5 2020.5];
+    figure(1+region)
+      subplot (2, 1, 1)
+      bar(X,Y,0.9,'stacked')
+    title(["Consumo anual por tipo en " tit_reg_largo{region}])
+    axis(xlim)
+    grid on
+    ylabel("[GWh]")
+    legend(tipos_tit,'location',"northeastoutside")
+      subplot (2, 1, 2)
+      bar(X,Y_per,0.9,'stacked')
+    title("Consumo respecto al total regional")
+    axis(horzcat(xlim,[0 100]))
+    grid on
+    ylabel(" [%] ")
+    legend(tipos_tit,'location',"northeastoutside")
+
+      filename=strcat("out/Ej_D_fig_",tit_reg{region},".jpg");
+      print(filename) 
+  endfor
 
   
 endfunction
