@@ -13,15 +13,9 @@ endfunction
 ## las columnas representadas en "matriz" por los valores de "columnasFiltro".
 function res = sumatoriaPorClave(matriz, columnasFiltro, columnasSumatoria)
   res = [];
-##  columnas = [];
-##  for i = 1:columns(columnasFiltro) columnas(1,i) = i; endfor
   columnas = 1:columns(columnasFiltro);
   j = 1;
   for i = 1:rows(matriz)
-##    valores = [];
-##    for k = 1:columns(columnasFiltro)
-##      valores(1,k) = matriz(i,columnasFiltro(1,k));
-##    endfor
     valores = matriz(i,columnasFiltro);
     pos = existeEnMatriz(res, valores, columnas);
     if pos != -1
@@ -29,10 +23,7 @@ function res = sumatoriaPorClave(matriz, columnasFiltro, columnasSumatoria)
         res(pos,columns(columnasFiltro)+k) += matriz(i,columnasSumatoria(1,k));
       endfor
     else
-##      for k = 1:columns(columnasFiltro)
-##        res(j, columnas(1,k)) = matriz(i,columnasFiltro(1,k));
-##      endfor
-      res(j,1:columns(columnasFiltro))=matriz(i,columnasFiltro);
+      res(j,1:columns(columnasFiltro)) = matriz(i,columnasFiltro);
       for k = 1:columns(columnasSumatoria)
         res(j, columns(columnasFiltro)+k) = matriz(i,columnasSumatoria(1,k));
       endfor
@@ -68,7 +59,8 @@ endfunction
 ## valor solicitado. 
 function pos = existeEnMatriz(matriz, valores, columnas);
   pos = -1;
-  for i = 1:rows(matriz)
+  i = 1;
+  while i <= rows(matriz) && pos == -1
     j = columnas(1, 1);
     while j >= 0 && j <= columns(columnas) && pos == -1
       if matriz(i, columnas(1, j)) == valores(1, columnas(1, j))
@@ -78,7 +70,8 @@ function pos = existeEnMatriz(matriz, valores, columnas);
         j = -1;
       endif
     endwhile
-  endfor
+    i += 1;
+  endwhile
 endfunction
 
 function ejercicio_A();
@@ -106,7 +99,7 @@ function ejercicio_B();
     anio = energiaMensual(i,1);
     mes = energiaMensual(i,2);
     pos = existeEnMatriz(demanda, [ anio mes ], [ 1 2 ]); #Si pos == -1 hay un error de datos
-    energiaMensual(i,4) = energiaMensual(i,3)/demanda(pos,3)*100;#### ACA PUSE EL PORCENTAJE EN 100 ####
+    energiaMensual(i,4) = energiaMensual(i,3)/demanda(pos,3)*100; #### ACA PUSE EL PORCENTAJE EN 100 ####
     energiaMensual(i,5) = (energiaMensual(i,4) <= 8);
   endfor
   csvwrite("out/Ej_B.csv",energiaMensual)
@@ -131,7 +124,6 @@ function ejercicio_B();
     title("Consumo mensual de energia renovable ")
     axis(xlim)
     grid on
-##    xlabel(xlab)
     ylabel("[GWh]")
   subplot (2, 1, 2)
     plot(i,energiaMensual(:,4),"r-");
@@ -148,9 +140,8 @@ endfunction
 function ejercicio_C();
   oferta = load('EnergiasRenovablesSimple.dat');
   demanda = load('DemandaSimple.dat');
-  
   energiaTotal_ = sumatoriaPorClave(oferta, [ 1 ], [ 6 ]);
-  years=energiaTotal_(:,1);energiaTotal=energiaTotal_(:,2);#Defino EnergiaTotal como el total de energia RENOVABLE anual de todas las fuentes.
+  years = energiaTotal_(:,1);energiaTotal=energiaTotal_(:,2);#Defino EnergiaTotal como el total de energia RENOVABLE anual de todas las fuentes.
   ofertaFiltrada = filtradoPorValor(oferta, [4;5], [ 4 ]); #Filtro la oferta por fuente == 4 || fuente == 5
   oferta = sortrows(sumatoriaPorClave(ofertaFiltrada, [ 1 4 ], [ 6 ]), [2, 1]); # [ anio fuente aporteTotal ] -> sort fuente asc anio asc
   energiaEolica = filtradoPorValor(oferta, [ 4 ], [ 2 ])(:,3); #Filtro la energia por fuente == 4
@@ -223,7 +214,7 @@ function ejercicio_D();
       endfor
       REGION(:,1+j+6*(i-1)) = res;
   endfor
-##  la matriz REGION tiene su primer columna los años y en las columnas 2:19,
+##  la matriz REGION tiene su primer columna los anios y en las columnas 2:19,
 ##  esta dividida en tres submatrices correspondientes a ls tres regiones 
 ##  con el aporte de cada una de los tipos de energia.
   
@@ -250,7 +241,7 @@ function ejercicio_D();
     DATA{2,1}=DATA{1,1};DATA{2,region+1}=reg_por;
     
     disp("---------------------")
-    disp(["La oferta de energía anual en " tit_reg_largo{region} " por tipo de energía fue de:"])
+    disp(["La oferta de energï¿½a anual en " tit_reg_largo{region} " por tipo de energï¿½a fue de:"])
     disp("(de izquierda a derecha segun codigo de tipo)"),disp("")
     num2str(horzcat(DATA{1,1},reg_abs)),disp("")
     disp("la misma como porcentaje de todos los tipos en la region")
@@ -285,8 +276,6 @@ function ejercicio_D();
       filename=strcat("out/Ej_D_fig_",tit_reg{region},".jpg");
       print(filename) 
   endfor
-
-  
 endfunction
 
 function ejercicio_E()
@@ -298,13 +287,21 @@ endfunction
 
 function ejercicio_F();
   oferta = load('EnergiasRenovablesSimple.dat');
-  energia = sumatoriaPorClave(oferta, [ 4 ], [ 6 ]); # [ fuente aporteTotal aportePorcentual ]
-  total = sum(energia(:,2));
-  for i = 1:rows(energia)
-    energia(i,3) = energia(i,2)/total*100;
+  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]); # [ anio mes fuente aporteTotal ]
+  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]); # [ anio fuente aporteTotal ]
+  for i = 1:rows(energiaMensual)
+    anio = energiaMensual(i,1);
+    fuente = energiaMensual(i,3);
+    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 2 ]);
+    totalAnual = energiaAnual(pos,3);
+    if totalAnual == 0
+      energiaMensual(i,5) = 0;
+    else
+      totalMensual = energiaMensual(i,4);
+      energiaMensual(i,5) = totalMensual/totalAnual*100;
+    endif
   endfor
-  energia = sortrows(energia, [1]);
-  disp(energia);
+  disp(energiaMensual) # [ anio mes fuente aporteTotal aportePorcentual ]
 endfunction
 
 function ejercicio_G()
@@ -333,27 +330,27 @@ function ejercicio_G()
 endfunction
 
 function main()
-##  disp("----------Ejercicio A----------\n");
-##  ejercicio_A();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio B----------\n");
-##  ejercicio_B();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio C----------\n");
-##  ejercicio_C();
-##  disp("-------------------------------\n");
+  disp("----------Ejercicio A----------\n");
+  ejercicio_A();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio B----------\n");
+  ejercicio_B();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio C----------\n");
+  ejercicio_C();
+  disp("-------------------------------\n");
   disp("----------Ejercicio D----------\n");
   ejercicio_D();
   disp("-------------------------------\n");
-##  disp("----------Ejercicio E----------\n");
-##  ejercicio_E();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio F----------\n");
-##  ejercicio_F();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio G----------\n");
-##  ejercicio_G();
-##  disp("-------------------------------\n");
+  disp("----------Ejercicio E----------\n");
+  ejercicio_E();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio F----------\n");
+  ejercicio_F();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio G----------\n");
+  ejercicio_G();
+  disp("-------------------------------\n");
 endfunction
 
 main()
