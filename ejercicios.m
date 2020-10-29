@@ -100,7 +100,6 @@ function ejercicio_A();
     disp(text);
   endfor
 endfunction
-
 function ejercicio_B();
   oferta = load('EnergiasRenovablesSimple.dat');
   demanda = load('DemandaSimple.dat');
@@ -370,24 +369,106 @@ function ejercicio_E()
 endfunction
 
 function ejercicio_F();
-  oferta = load('EnergiasRenovablesSimple.dat');
-  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]); # [ anio mes fuente aporteTotal ]
-  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]); # [ anio fuente aporteTotal ]
-  for i = 1:rows(energiaMensual)
-    anio = energiaMensual(i,1);
-    fuente = energiaMensual(i,3);
-    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 2 ]);
-    totalAnual = energiaAnual(pos,3);
-    if totalAnual == 0
-      energiaMensual(i,5) = 0;
-    else
-      totalMensual = energiaMensual(i,4);
-      energiaMensual(i,5) = totalMensual/totalAnual*100;
-    endif
-  endfor
-  disp(energiaMensual) # [ anio mes fuente aporteTotal aportePorcentual ]
-endfunction
+##  oferta = load('EnergiasRenovablesSimple.dat');
+##  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]); # [ anio mes fuente aporteTotal ]
+##  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]); # [ anio fuente aporteTotal ]
+##  for i = 1:rows(energiaMensual)
+##    anio = energiaMensual(i,1);
+##    fuente = energiaMensual(i,3);
+##    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 2 ]);
+##    totalAnual = energiaAnual(pos,3);
+##    if totalAnual == 0
+##      energiaMensual(i,5) = 0;
+##    else
+##      totalMensual = energiaMensual(i,4);
+##      energiaMensual(i,5) = totalMensual/totalAnual*100;
+##    endif
+##  endfor
+##  disp(energiaMensual) # [ anio mes fuente aporteTotal aportePorcentual ]
+##  
+##  csvwrite("out/Ej_F - energiaMensual.csv",energiaMensual)
 
+
+
+####################
+##  c=1;
+##  for  i=2011:2020;
+##    for j=1:12;
+##      while !(i==2020 & j>8)
+##        fechas(c,1:2)=[i j];
+##      endwhile
+##      c+=1;
+##    endfor
+##  endfor
+##  
+##  for i = 1:6;
+##    data=filtradoPorValor(energiaMensual,[i],[3])(:,[1 2 4 5])
+##    for k=1:rows(fechas)
+##      n=rows(data);
+##      date = data(:,[1 2]);
+##      if !(any(date == fechas(k,:)))
+##        data(n+1,1:2)= fechas(k,:);
+##        data(n+1,2:4)= [0 0];
+##      endif
+##    endfor
+##  data=sortrows(data,[1 2]);
+##  DataMensual{i} = data;
+##
+##  
+####    DataMensual{i} = filtradoPorValor(energiaMensual,[i],[3])(:,[1 2 4 5]);
+##    csvwrite(strcat("out/Ej_F-Fuente_",num2str(i),".csv"),DataMensual{i})
+##    Y(:,i)    = DataMensual{i}(:,3);
+##    Y_por(:,i)= DataMensual{i}(:,4)
+##  endfor
+##  
+####  GRAPHING
+##  tit_tip = {"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
+##  X=1:rows(DataMensual{1})
+##    subplot(2,1,1)
+##      plot(X,Y)
+##      title("Consumo mensual por fuente")
+##      cod_tip = 1:6;
+##      legend(tit_tip,'location',"northeastoutside")
+##      ylabel("[GWh]")
+##    subplot(2,1,2)
+##      plot(X,Y_por)
+##      legend(tit_tip,'location',"northeastoutside")
+##      ylabel("[%]")
+##
+##############  
+
+
+for i=1:6
+  Data{i}=csvread(strcat("out/Energia_fuente_",num2str(i),".csv"));
+  Data{i}=Data{i}(2:rows(Data{i}),:);
+  Y(:,i)  = Data{i}(:,3);
+  Ypor(:,i)= Data{i}(:,4);
+endfor
+
+  X=1:rows(Data{1});X=X';
+  tipos_tit={"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
+
+  figure(7)      
+    subplot(2,1,1)
+      plot(X,Y,'-')
+      title("Oferta de energia mensual por fuente")
+      grid on
+      ylabel("[GWh]")
+      legend(tipos_tit,'location',"northeastoutside")
+
+      
+    subplot(2,1,2)
+      plot(X,Ypor)
+      title("Oferta de energia mensual en relacion a la anual por fuente")
+      grid on
+      ylabel("[%]")
+      xlabel("Meses transcurridos desde Ago2011")
+      legend(tipos_tit,'location',"northeastoutside")
+      
+      print(7,"out/Ej_F.jpg")
+
+endfunction
+  
 function ejercicio_G()
   oferta = load('EnergiasRenovablesSimple.dat');
   mayorCentralFuente = []; # [ fuente central mes region energia ]
@@ -411,30 +492,32 @@ function ejercicio_G()
       mayorCentralFuente(fuente, 5) = energia;
     endif
   endfor
+
+  
 endfunction
 
 function main()
-  disp("----------Ejercicio A----------\n");
-  ejercicio_A();
-  disp("-------------------------------\n");
-  disp("----------Ejercicio B----------\n");
-  ejercicio_B();
-  disp("-------------------------------\n");
-  disp("----------Ejercicio C----------\n");
-  ejercicio_C();
-  disp("-------------------------------\n");
-  disp("----------Ejercicio D----------\n");
-  ejercicio_D();
-  disp("-------------------------------\n");
-  disp("----------Ejercicio E----------\n");
-  ejercicio_E();
-  disp("-------------------------------\n");
+##  disp("----------Ejercicio A----------\n");
+##  ejercicio_A();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio B----------\n");
+##  ejercicio_B();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio C----------\n");
+##  ejercicio_C();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio D----------\n");
+##  ejercicio_D();
+##  disp("-------------------------------\n");
+##  disp("----------Ejercicio E----------\n");
+##  ejercicio_E();
+##  disp("-------------------------------\n");
   disp("----------Ejercicio F----------\n");
   ejercicio_F();
   disp("-------------------------------\n");
-  disp("----------Ejercicio G----------\n");
-  ejercicio_G();
-  disp("-------------------------------\n");
+##  disp("----------Ejercicio G----------\n");
+##  ejercicio_G();
+##  disp("-------------------------------\n");
 endfunction
 
 main()
