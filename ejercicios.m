@@ -369,75 +369,6 @@ function ejercicio_E()
 endfunction
 
 function ejercicio_F();
-##  oferta = load('EnergiasRenovablesSimple.dat');
-##  energiaMensual = sumatoriaPorClave(oferta, [ 1 2 4 ], [ 6 ]); # [ anio mes fuente aporteTotal ]
-##  energiaAnual = sumatoriaPorClave(energiaMensual, [ 1 3 ], [ 4 ]); # [ anio fuente aporteTotal ]
-##  for i = 1:rows(energiaMensual)
-##    anio = energiaMensual(i,1);
-##    fuente = energiaMensual(i,3);
-##    pos = existeEnMatriz(energiaAnual, [ anio fuente ], [ 1 2 ]);
-##    totalAnual = energiaAnual(pos,3);
-##    if totalAnual == 0
-##      energiaMensual(i,5) = 0;
-##    else
-##      totalMensual = energiaMensual(i,4);
-##      energiaMensual(i,5) = totalMensual/totalAnual*100;
-##    endif
-##  endfor
-##  disp(energiaMensual) # [ anio mes fuente aporteTotal aportePorcentual ]
-##  
-##  csvwrite("out/Ej_F - energiaMensual.csv",energiaMensual)
-
-
-
-####################
-##  c=1;
-##  for  i=2011:2020;
-##    for j=1:12;
-##      while !(i==2020 & j>8)
-##        fechas(c,1:2)=[i j];
-##      endwhile
-##      c+=1;
-##    endfor
-##  endfor
-##  
-##  for i = 1:6;
-##    data=filtradoPorValor(energiaMensual,[i],[3])(:,[1 2 4 5])
-##    for k=1:rows(fechas)
-##      n=rows(data);
-##      date = data(:,[1 2]);
-##      if !(any(date == fechas(k,:)))
-##        data(n+1,1:2)= fechas(k,:);
-##        data(n+1,2:4)= [0 0];
-##      endif
-##    endfor
-##  data=sortrows(data,[1 2]);
-##  DataMensual{i} = data;
-##
-##  
-####    DataMensual{i} = filtradoPorValor(energiaMensual,[i],[3])(:,[1 2 4 5]);
-##    csvwrite(strcat("out/Ej_F-Fuente_",num2str(i),".csv"),DataMensual{i})
-##    Y(:,i)    = DataMensual{i}(:,3);
-##    Y_por(:,i)= DataMensual{i}(:,4)
-##  endfor
-##  
-####  GRAPHING
-##  tit_tip = {"BIODIESEL";"BIOGAS";"BIOMASA";"EOLICO";"HIDRO";"SOLAR"};
-##  X=1:rows(DataMensual{1})
-##    subplot(2,1,1)
-##      plot(X,Y)
-##      title("Consumo mensual por fuente")
-##      cod_tip = 1:6;
-##      legend(tit_tip,'location',"northeastoutside")
-##      ylabel("[GWh]")
-##    subplot(2,1,2)
-##      plot(X,Y_por)
-##      legend(tit_tip,'location',"northeastoutside")
-##      ylabel("[%]")
-##
-##############  
-
-
 for i=1:6
   Data{i}=csvread(strcat("out/Energia_fuente_",num2str(i),".csv"));
   Data{i}=Data{i}(2:rows(Data{i}),:);
@@ -468,32 +399,26 @@ endfor
       print(7,"out/Ej_F.jpg")
 
 endfunction
-  
+
 function ejercicio_G()
   oferta = load('EnergiasRenovablesSimple.dat');
-  mayorCentralFuente = []; # [ fuente central mes region energia ]
+  totalCentralFuente = sumatoriaPorClave(oferta, [ 4 3 ], [ 6 ]); #[ fuente central aporteTotal ]
+  mayorCentralFuente = []; # [ fuente central energia ]
   for i = 1:6
-    mayorCentralFuente(i, 1) = i;
-    mayorCentralFuente(i, 2) = -Inf;
-    mayorCentralFuente(i, 3) = 0;
-    mayorCentralFuente(i, 4) = 0;
-    mayorCentralFuente(i, 5) = 0;
+    mayorCentralFuente(i, 1) = i; #Fuente
+    mayorCentralFuente(i, 2) = 0; #Central
+    mayorCentralFuente(i, 3) = -Inf; #Energia
   endfor
-  for i = 1:rows(oferta)
-    mes = oferta(i,2);
-    central = oferta(i,3);
-    fuente = oferta(i,4);
-    region = oferta(i,5);
-    energia = oferta(i,6);
-    if central > mayorCentralFuente(fuente, 2)
+  for i = 1:rows(totalCentralFuente)
+    fuente = totalCentralFuente(i,1);
+    central = totalCentralFuente(i,2);
+    aporte = totalCentralFuente(i,3);
+    if aporte > mayorCentralFuente(fuente, 3)
       mayorCentralFuente(fuente, 2) = central;
-      mayorCentralFuente(fuente, 3) = mes;
-      mayorCentralFuente(fuente, 4) = region;
-      mayorCentralFuente(fuente, 5) = energia;
+      mayorCentralFuente(fuente, 3) = aporte;
     endif
   endfor
-
-  
+  disp(mayorCentralFuente);
 endfunction
 
 function main()
