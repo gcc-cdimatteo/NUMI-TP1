@@ -155,16 +155,11 @@ function ejercicio_C();
   oferta = sortrows(sumatoriaPorClave(ofertaFiltrada, [ 1 4 ], [ 6 ]), [2, 1]); # [ anio fuente aporteTotal ] -> sort fuente asc anio asc
   energiaEolica = filtradoPorValor(oferta, [ 4 ], [ 2 ])(:,3); #Filtro la energia por fuente == 4
   energiaHidraulica = filtradoPorValor(oferta, [ 5 ], [ 2 ])(:,3); #Filtro la energia por fuente == 5
-##  demandaAnual = sumatoriaPorClave(demanda, [ 1 ], [ 3 ]); # [ anio demandaTotal ]
-  
   Data = roundn(horzcat(years,energiaEolica,energiaEolica./energiaTotal*100,energiaHidraulica,energiaHidraulica./energiaTotal*100,energiaEolica.+energiaHidraulica,energiaTotal),2);
-##  csvwrite("out/Ej_C.csv",Data)
   
 ##  PRINTING
 
   titulos=["Anio\t" "Eolica\t" "Eolica (%)\t" "Hidra\t" "Hidra (%)\t" "Eol+Hid\t" "En Total"];
-##  printf("%4s\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t%s\t\t\n",titulos),
-##  disp(titulos)
   printf("%s | %s | %s | %s | %s | %s | %s\n",titulos'),disp("")
   disp("----------------------------------------------------------------------")
   printf("%4i  %9.1f  %9.1f  %9.1f  %9.1f  %9.1f  %9.1f\n",Data'),
@@ -422,27 +417,27 @@ function ejercicio_G()
 endfunction
 
 function main()
-##  disp("----------Ejercicio A----------\n");
-##  ejercicio_A();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio B----------\n");
-##  ejercicio_B();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio C----------\n");
-##  ejercicio_C();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio D----------\n");
-##  ejercicio_D();
-##  disp("-------------------------------\n");
-##  disp("----------Ejercicio E----------\n");
-##  ejercicio_E();
-##  disp("-------------------------------\n");
+  disp("----------Ejercicio A----------\n");
+  ejercicio_A();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio B----------\n");
+  ejercicio_B();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio C----------\n");
+  ejercicio_C();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio D----------\n");
+  ejercicio_D();
+  disp("-------------------------------\n");
+  disp("----------Ejercicio E----------\n");
+  ejercicio_E();
+  disp("-------------------------------\n");
   disp("----------Ejercicio F----------\n");
   ejercicio_F();
   disp("-------------------------------\n");
-##  disp("----------Ejercicio G----------\n");
-##  ejercicio_G();
-##  disp("-------------------------------\n");
+  disp("----------Ejercicio G----------\n");
+  ejercicio_G();
+  disp("-------------------------------\n");
 endfunction
 
 main()
