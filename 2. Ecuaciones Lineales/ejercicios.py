@@ -7,28 +7,58 @@ MICROORGANISMO_CRECIMIENTO = [
                                 [0, 0, 2, 0, 7, 5]
                             ]
 
-def elementos_diagonal(matriz):
-    elementos = []
-    dimension = len(matriz)
-    for i in range(dimension):
-        for j in range(dimension-1):
-            if i > j:
-                elementos.append(matriz[i][j])
-    return elementos
-            
-def matriz_triangulada(matriz):
-    diagonal = elementos_diagonal(matriz)
-    for elem in diagonal:
-        if elem != 0: 
-            return False
-    return True
+def abs_list(lista):
+    absLista = []
+    for elem in lista:
+        absLista.append(abs(elem))
+    return absLista
 
 def ejercicioA(A,b):
-    dim = len(A[0])
-    for j in range(dim-2):
-        for i in range(j+1, dim):
-            m = A[i][j]/A[j][j]
-            A[i] = A[i] - m*A[j]
+    dim = len(A)
+    filA = {}
+    for cont in range(dim):
+        filA[cont] = abs_list(A[cont])
+    filA_sorted = {k: v for k, v in sorted(filA.items(), key=lambda item: item[1], reverse=True)}
+    A_sorted = [[]*dim]*dim
+    cont = 0
+    for fil in filA_sorted.keys():
+        A_sorted[cont] = A[fil]
+        cont += 1
+
+    # LO SAQUE DE INTERNET 
+
+    n = len(a)
+    p = len(b[0])
+
+    for i in range(n - 1):
+        k = i
+        for j in range(i + 1, n):
+            if abs(a[j][i]) > abs(a[k][i]):
+                k = j
+        if k != i:
+            a[i], a[k] = a[k], a[i]
+            b[i], b[k] = b[k], b[i]
+            det = -det
+ 
+        for j in range(i + 1, n):
+            t = a[j][i]/a[i][i]
+            for k in range(i + 1, n):
+                a[j][k] -= t*a[i][k]
+            for k in range(p):
+                b[j][k] -= t*b[i][k]
+ 
+    for i in range(n - 1, -1, -1):
+        for j in range(i + 1, n):
+            t = a[i][j]
+            for k in range(p):
+                b[i][k] -= t*b[j][k]
+        t = 1/a[i][i]
+        det *= a[i][i]
+        for j in range(p):
+            b[i][j] *= t
+
+    for elem in A_sorted:
+        print(elem)
     return
 
 def ejercicioB():
