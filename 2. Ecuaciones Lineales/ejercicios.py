@@ -13,6 +13,11 @@ def abs_list(lista):
         absLista.append(abs(elem))
     return absLista
 
+def swap(matriz, pos1, pos2):
+    aux = matriz[pos1]
+    matriz[pos1] = matriz[pos2]
+    matriz[pos2] = aux
+
 def ejercicioA(A,b):
     dim = len(A)
     filA = {}
@@ -25,37 +30,26 @@ def ejercicioA(A,b):
         A_sorted[cont] = A[fil]
         cont += 1
 
-    # LO SAQUE DE INTERNET 
 
-    n = len(a)
-    p = len(b[0])
+    h = 0
+    k = 0
 
-    for i in range(n - 1):
-        k = i
-        for j in range(i + 1, n):
-            if abs(a[j][i]) > abs(a[k][i]):
-                k = j
-        if k != i:
-            a[i], a[k] = a[k], a[i]
-            b[i], b[k] = b[k], b[i]
-            det = -det
- 
-        for j in range(i + 1, n):
-            t = a[j][i]/a[i][i]
-            for k in range(i + 1, n):
-                a[j][k] -= t*a[i][k]
-            for k in range(p):
-                b[j][k] -= t*b[i][k]
- 
-    for i in range(n - 1, -1, -1):
-        for j in range(i + 1, n):
-            t = a[i][j]
-            for k in range(p):
-                b[i][k] -= t*b[j][k]
-        t = 1/a[i][i]
-        det *= a[i][i]
-        for j in range(p):
-            b[i][j] *= t
+    while h < dim and k < dim:
+        i_max = 0
+        for i in range(h,dim):
+            if abs(A_sorted[i_max][k]) < abs(A_sorted[i][k]): i_max = i
+        
+        if A_sorted[i_max][k] == 0:
+            k = k+1
+        else:
+            swap(A_sorted, h, i_max)
+            for i in range(h + 1, dim):
+                f = A_sorted[i][k]/A_sorted[h][k]
+                A_sorted[i][k] = 0
+                for j in range(k + 1, dim):
+                    A_sorted[i][j] = A_sorted[i][j] - A_sorted[h][j] * f
+            h += 1
+            k += 1
 
     for elem in A_sorted:
         print(elem)
@@ -86,7 +80,7 @@ def armar_sistema(matriz):
             fila.append(matriz[i][cont])
             cont += 1
         A.append(fila)
-        b.append(matriz[i][cont])
+        b.append([matriz[i][cont]])
     return A,b
 
 def main():
