@@ -1,28 +1,12 @@
-RQ = int(0.2)
-MICROORGANISMO_CRECIMIENTO = [
-                                [RQ, 0.0, 1.0, 1.0, 0.0, 2.0] , 
-                                [1.0, 3.0, -1.0, -1.0, -1.0, -6.0] , 
-                                [-1.0, -1.0, 20.0, 0.0, 2.0, 1.0] , 
-                                [-1.0, -1.0, 0.0, 8.0, 4.0, 0.0] ,
-                                [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
-                            ]
+import math
+import matplotlib.pyplot as plt
+import numpy as np
 
 def abs_list(lista):
     absLista = []
     for elem in lista:
         absLista.append(abs(elem))
     return absLista
-
-def swap(A_sorted, pos1, pos2):
-    aux = A_sorted[pos1]
-    A_sorted[pos1] = A_sorted[pos2]
-    A_sorted[pos2] = aux
-
-def matriz_triangulada(matriz):
-    for i in range(len(matriz)):
-        for j in range(len(matriz[i])):
-            if i > j and matriz[i][j] != 0: return False
-    return True
 
 def fila_triangulada(matriz, pos_fila):
     for i in range(len(matriz)):
@@ -31,7 +15,8 @@ def fila_triangulada(matriz, pos_fila):
             if i > j and matriz[i][j] != 0: return False
     return True
 
-def ejercicioA(A,b):
+def eliminacion_gaussiana(A,b):
+    vector_x = [[0]*len(A[0])]
     # Ordeno
     dim = len(A)
     filA = {}
@@ -55,8 +40,19 @@ def ejercicioA(A,b):
             divisor = A_sorted[k][indice]
             for j in range(len(A_sorted[k])):
                 A_sorted[k][j] = A_sorted[k][j]*pivot/divisor - A_sorted[i-1][j]
+                b[i][0] = b[i][0]*pivot/divisor - A_sorted[i-1][j]
+    #Obtengo vector_x
+    for i in range(len(A_sorted)):
+        for j in range(len(A_sorted[i])):
+            vector_x[0][j] += A_sorted[i][j]
+    return A_sorted, b, vector_x
+
+def ejercicioA(A,b):
+    A_triangulada, b, vector_x = eliminacion_gaussiana(A, b)
     #Imprimo                    
-    for elem in A_sorted:
+    for elem in A_triangulada:
+        print(elem)
+    for elem in vector_x[0]:
         print(elem)
     return
 
@@ -66,11 +62,37 @@ def ejercicioB():
 def ejercicioC():
     print("Ejercicio C")
 
-def ejercicioD():
-    print("Ejercicio D")
+def modulo(vec): # vec = [nx1]
+    tot = 0
+    for i in range(len(vec[0])):
+        tot += vec[0][i]*vec[0][i]
+    return math.sqrt(tot)
 
-def ejercicioE():
-    print("Ejercicio E")
+def ejercicioD():
+    # gauss = eliminacion_gaussiana()
+    # jacobi = jacobi() - gauss
+    # gauss_seidel = gauss_seidel() - gauss
+    # sor = sor() - gauss
+    # modulo_res = map(modulo, [jacobi, gauss_seidel, sor])
+    # print(max(modulo))
+    return
+
+def ejercicioE(A, b, RQ_POS):
+    aux = A[RQ_POS[0]][RQ_POS[1]]
+    res = []
+    for v in [0.2, 0.3, 0.4, 0.5, 0.6]:
+        A[RQ_POS[0]][RQ_POS[1]] = v
+        res.append(eliminacion_gaussiana(A,b)[2])
+    print(res)
+    modulo_res = list(map(modulo, res))
+    print(modulo_res)
+    A[RQ_POS[0]][RQ_POS[1]] = aux
+    x = np.arange(len(modulo_res))
+    fig, ax = plt.subplots()
+    plt.bar(x, modulo_res)
+    plt.xticks(x, ('RQ=0.2', 'RQ=0.3', 'RQ=0.4', 'RQ=0.5', 'RQ=0.6'))
+    plt.show()
+    return
 
 def ejercicioF():
     print("Ejercicio F")
@@ -89,10 +111,18 @@ def armar_sistema(A_sorted):
     return A,b
 
 def main():
+    RQ_POS = (0,0)
+    MICROORGANISMO_CRECIMIENTO = [
+                                    [0.2, 0.0, 1.0, 1.0, 0.0, 2.0] , 
+                                    [1.0, 3.0, -1.0, -1.0, -1.0, -6.0] , 
+                                    [-1.0, -1.0, 20.0, 0.0, 2.0, 1.0] , 
+                                    [-1.0, -1.0, 0.0, 8.0, 4.0, 0.0] ,
+                                    [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
+                                ]
     A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
-    ej = [ "A" ]
+    ej = [ "E" ]
     if "A" in ej:
-        ejercicioA(A,b)
+        ejercicioA(A, b)
     if "B" in ej:
         ejercicioB()
     if "C" in ej:
@@ -100,7 +130,7 @@ def main():
     if "D" in ej:
         ejercicioD()
     if "E" in ej:
-        ejercicioE()
+        ejercicioE(A, b, RQ_POS)
     if "F" in ej:
         ejercicioF()
 
