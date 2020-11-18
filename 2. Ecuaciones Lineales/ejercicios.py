@@ -2,6 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import norm as norm
+import pandas as pd
 
 def Linf(x):
     return norm(x,np.inf)
@@ -67,7 +68,7 @@ def subA(A,tipo):
                 if i<j: res[i][j] = A[i][j]
     return np.array(res)
 
-def jacobi(A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
+def jacobi     (A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
     # Esta funcion devuelve:
     # x   = matriz cuya i-sima columna es la i-esima iteracion de X por jacobi
     # err = vector cuyo i-esimo valor es el error relativo entre las iteraciones x[n] y x[n+1] 
@@ -132,7 +133,7 @@ def GaussSeidel(A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
         if n>0 and err[n] < tol:break
     return x, err, iteraciones-1
 
-def SOR(A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
+def SOR        (A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
     # Esta funcion devuelve:
     # x   = matriz cuya i-sima columna es la i-esima iteracion de X por jacobi
     # err = vector cuyo i-esimo valor es el error relativo entre las iteraciones x[n] y x[n+1] 
@@ -144,7 +145,7 @@ def SOR(A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
     L=subA(A,1)
     D=subA(A,2)
     U=subA(A,3)
-    if x0 == None:  x0=np.zeros(nA)
+    if x0 == None:  x0=np.zeros(nA).reshape((nA,1))
     x=[]
     x.append(np.array(x0))
     err=[10*tol]
@@ -153,11 +154,11 @@ def SOR(A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
         xnmas1=np.zeros(mA)
         for i in range(mA):
             xnmas1[i] =  (1-w) *  x[n][i]  +  w  *  np.linalg.inv(D)[i,i] * ( b[i] - np.matmul( L  , xnmas1)[i] - np.matmul( U , x[n])[i] )
-        x.append(np.array(xnmas1))
+        x.append(np.array(xnmas1).reshape((nA,1)))
         err.append( Linf( x[n+1] - x[n] ) / Linf(x[n])) 
         if verbose==True and np.remainder(n,density)==0:
             print("n      =",n)
-            print("x["+str(n+1)+"]   =",xnmas1)
+            print("x["+str(n+1)+"]   =",xnmas1.reshape((1,nA)))
             print("err["+str(n)+"] =",err[n])
             print(".....")
         if n>0 and err[n] < tol:break
@@ -185,8 +186,28 @@ def ejercicioB(A,b):
     print("\nla misma se alacanzo en {} iteraciones, con un error relativo de {}".format(str(nGS),str(round(errGS[nGS],10))))
     print("\n --------------------------- \n")
 
-def ejercicioC():
-    print("Ejercicio C")
+def ejercicioC(A,b):
+    print("Ejercicio C\n ----------------")
+    print("Se adoptan los valores de w =")
+    w_list=np.linspace(0.25,1,10)
+    print(w_list)
+    err=[]
+    n_sor=[]
+    print("\nSe corre el algoritmo SOR para cada uno, obteniendose :")
+    for i in range(len(w_list)):
+        _ , err_i , n_i = SOR(A,b,w=w_list[i])
+        err.append(err_i)
+        n_sor.append(n_i)
+
+    df=pd.DataFrame(np.c_[np.transpose(w_list),n_sor],columns=['w','n'])
+    print(df)
+    n_min=df.n.min()
+    w_min=df[df.n==n_min].w
+    print("\nPor lo que se adopta el w tal que n sea minimo \n")
+    print(df[df.n==n_min])
+    print("\n ---------------")
+
+    return w_min , n_min
 
 def modulo(vec): # vec = [nx1]
     tot = 0
@@ -236,11 +257,6 @@ def armar_sistema(A_sorted):
         b.append([A_sorted[i][cont]])
     return A,b
 
-# def armar_sistema(Ab):
-#     A=np.array(Ab)[:,:-1]
-#     b=np.array(Ab)[:,-1]
-#     return A,b
-
 def main():
     RQ_POS = (0,0)
     MICROORGANISMO_CRECIMIENTO = [
@@ -250,14 +266,18 @@ def main():
                                     [-1.0, -1.0, 0.0, 8.0, 4.0, 0.0] ,
                                     [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
                                 ]
+
     A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
-    ej = [ "B" ]
+    ej = [ "A","B","C" ]
     if "A" in ej:
         ejercicioA(A,b)
+        # esta funcion altera el valor de A, al ejecutarse y pasar al resto de puntos, 
+        # "A" y no es el A definido en funcion de MICROORG... para eso vuelvo a definir A,b
+    A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
     if "B" in ej:
         ejercicioB(A,b)
     if "C" in ej:
-        ejercicioC()
+        w_min , n_min = ejercicioC(A,b)
     if "D" in ej:
         ejercicioD()
     if "E" in ej:
