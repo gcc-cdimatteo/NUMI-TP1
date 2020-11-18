@@ -20,7 +20,6 @@ def fila_triangulada(matriz, pos_fila):
     return True
 
 def eliminacion_gaussiana(A,b):
-    vector_x = [[0]*len(A[0])]
     # Ordeno
     dim = len(A)
     filA = {}
@@ -45,10 +44,17 @@ def eliminacion_gaussiana(A,b):
             for j in range(len(A_sorted[k])):
                 A_sorted[k][j] = A_sorted[k][j]*pivot/divisor - A_sorted[i-1][j]
                 b[i][0] = b[i][0]*pivot/divisor - A_sorted[i-1][j]
-    #Obtengo vector_x
-    for i in range(len(A_sorted)):
+    #Resulevo el sistema
+    vector_x = [[1]*len(A[0])]
+    for i in range(-1,-(len(A_sorted)+1),-1):
+        tot = 0
+        divisor = 1
         for j in range(len(A_sorted[i])):
-            vector_x[0][j] += A_sorted[i][j]
+            if j == len(A_sorted)+i: 
+                divisor = A_sorted[i][j]
+            else:
+                tot += A_sorted[i][j]*vector_x[0][j]
+        vector_x[0][i] = (b[i][0]-tot)/divisor
     return A_sorted, b, vector_x
 
 def subA(A,tipo):
@@ -175,7 +181,7 @@ def main():
                                     [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
                                 ]
     A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
-    ej = [ "A" ,"B" ]
+    ej = [ "A" , "E" ]
     if "A" in ej:
         ejercicioA(A, b)
     if "B" in ej:
