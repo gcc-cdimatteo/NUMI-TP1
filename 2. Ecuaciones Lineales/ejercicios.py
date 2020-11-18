@@ -4,6 +4,7 @@ import numpy as np
 from numpy.linalg import norm as norm
 #import pandas as pd
 
+### Funciones AUXILIARES
 def Linf(x):
     return norm(x,np.inf)
 
@@ -171,6 +172,8 @@ def SOR        (A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
             print(".....")
         if n>0 and err[n] < tol:break
     return x, err, iteraciones-1
+
+### Funciones EJERCICIOS
 
 def ejercicioA(A,b):
     A_triangulada, b, vector_x = eliminacion_gaussiana(A, b)
