@@ -2,7 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import norm as norm
-import pandas as pd
+#import pandas as pd
 
 def Linf(x):
     return norm(x,np.inf)
@@ -28,8 +28,10 @@ def eliminacion_gaussiana(A,b):
         filA[cont] = abs_list(A[cont])
     filA_sorted = {k: v for k, v in sorted(filA.items(), key=lambda item: item[1], reverse=True)}
     A_sorted = []
+    b_sorted = []
     for fil in filA_sorted.keys():
         A_sorted.append(A[fil])
+        b_sorted.append(b[fil])
     #Triangulo
     for i in range(len(A_sorted)):
         if i == 0 or fila_triangulada(A_sorted, i): continue
@@ -44,7 +46,7 @@ def eliminacion_gaussiana(A,b):
             divisor = A_sorted[k][indice]
             for j in range(len(A_sorted[k])):
                 A_sorted[k][j] = A_sorted[k][j]*pivot/divisor - A_sorted[i-1][j]
-                b[i][0] = b[i][0]*pivot/divisor - A_sorted[i-1][j]
+            b_sorted[k][0] = b_sorted[k][0]*pivot/divisor - b_sorted[i-1][0]
     #Resulevo el sistema
     vector_x = [[1]*len(A[0])]
     for i in range(-1,-(len(A_sorted)+1),-1):
@@ -55,8 +57,8 @@ def eliminacion_gaussiana(A,b):
                 divisor = A_sorted[i][j]
             else:
                 tot += A_sorted[i][j]*vector_x[0][j]
-        vector_x[0][i] = (b[i][0]-tot)/divisor
-    return A_sorted, b, vector_x
+        vector_x[0][i] = (b_sorted[i][0]-tot)/divisor
+    return A_sorted, b_sorted, vector_x
 
 def subA(A,tipo):
     # Esta funcion devuelve las matrices Lower, Diagonal y Upper (tipo= 1,2,3 respectivamente).
@@ -175,6 +177,10 @@ def ejercicioA(A,b):
     #Imprimo                    
     for elem in A_triangulada:
         print(elem)
+    print("B:")
+    for elem in b:
+        print(elem[0])
+    print("SOL:")
     for elem in vector_x[0]:
         print(elem)
     return
@@ -241,7 +247,6 @@ def ejercicioE(A, b, RQ_POS):
     print(modulo_res)
     A[RQ_POS[0]][RQ_POS[1]] = aux
     x = np.arange(len(modulo_res))
-    fig, ax = plt.subplots()
     plt.bar(x, modulo_res)
     plt.xticks(x, ('RQ=0.2', 'RQ=0.3', 'RQ=0.4', 'RQ=0.5', 'RQ=0.6'))
     plt.show()
@@ -272,14 +277,10 @@ def main():
                                     [-1.0, -1.0, 0.0, 8.0, 4.0, 0.0] ,
                                     [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
                                 ]
-
     A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
-    ej = [ "A","B","C" ]
+    ej = [ "A" ]
     if "A" in ej:
         ejercicioA(A,b)
-        # esta funcion altera el valor de A, al ejecutarse y pasar al resto de puntos, 
-        # "A" y no es el A definido en funcion de MICROORG... para eso vuelvo a definir A,b
-    A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
     if "B" in ej:
         ejercicioB(A,b)
     if "C" in ej:
