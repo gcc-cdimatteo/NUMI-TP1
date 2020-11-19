@@ -105,7 +105,7 @@ def jacobi     (A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5,error
         if error == 'Relative':
             err_n=Linf( x[n+1] - x[n] ) / Linf(x[n])
         else:
-            err_n=Linf(x[n]-Xref)
+            err_n=Linf(x[n]-Xref.reshape((nA,1)))
         err.append(err_n)
         if verbose==True and np.remainder(n,density)==0 :
             print("n      =",n)
@@ -142,7 +142,7 @@ def xGaussSeidel(A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5,erro
         if error == 'Relative':
             err_n=Linf( x[n+1] - x[n] ) / Linf(x[n])
         else:
-            err_n=Linf(x[n]-Xref)
+            err_n=Linf(x[n]-Xref.reshape((nA,1)))
         err.append(err_n)
 
         if verbose==True and np.remainder(n,density)==0:
@@ -179,7 +179,7 @@ def SOR        (A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5,err
         if error == 'Relative':
             err_n=Linf( x[n+1] - x[n] ) / Linf(x[n])
         else:
-            err_n=Linf(x[n]-Xref)
+            err_n=Linf(x[n]-Xref.reshape((nA,1)))
         err.append(err_n)
 
         if verbose==True and np.remainder(n,density)==0:
@@ -296,11 +296,39 @@ def ejercicioF(A,b,xGauss,w_min):
     xGS  , errGS  , nGS    = xGaussSeidel(A,b,tol=tol,error=1,Xref=Xref)
     xSOR , errSOR , nSOR   = SOR(A,b,w_min,tol=tol,error=1,Xref=Xref)
 
-    print(np.array(xJac)[-100:-1])
-    # X=[xJac[-1],xGS[-1],xSOR[-1]]
-    # print(X)
-    # for i in X:
-    #     print(i)
+    X=[xJac[-1],xGS[-1],xSOR[-1]]
+    
+
+    plt.style.use('ggplot')
+    error_plot=plt.figure(figsize=(25,15))
+    ax = error_plot.add_subplot(111)
+    ax.plot(errJac[1:],label="Jac",marker='*',c='g')
+    ax.plot(errGS[1:],label="GS",marker='*',c='b')
+    ax.plot(errSOR[1:],label="SOR",marker='*',c='#ff52d1ff')
+    # escala LOG y grid
+    plt.yscale('log')
+    ax.yaxis.grid(color='gray', linestyle='dashed',which='both')
+    #linea horizontal de la tolerancia
+    ax.axhline(tol,c='r',linestyle='--',label='tol')
+    plt.text(max(nGS,nJac,nSOR)*3/4,tol,'tol',fontsize=30,c='r')
+    #lineas verticales de los n's de corte
+    ax.axvline(nGS,c='b',linestyle='--')
+    plt.text(nGS,100*tol,'nGS ='+str(nGS),fontsize=15,c='b')
+    ax.axvline(nJac,c='g',linestyle='--')
+    plt.text(nJac-10,100*tol,'nJac ='+str(nJac),fontsize=15,c='g')
+    ax.axvline(nSOR,c='#ff52d1ff',linestyle='--')
+    plt.text(nSOR-23,100*tol,'nSOR ='+str(nSOR),fontsize=15,c='#ff52d1ff')
+    # Legend
+    handles, _ = ax.get_legend_handles_labels()
+    labels=["Jacobi","Gaus-Seidel","SOR","tol ="+str(tol)]
+    ax.legend(handles,labels,fontsize=30,frameon=True,framealpha=0.9)
+    # Titulos de Grafico y ejes
+    plt.title('Error de Norma Linf entre X[n] y xGauss',fontsize=30)
+    plt.ylabel(ylabel='error',fontsize=30)
+    plt.xlabel(xlabel='n',fontsize=30)
+    plt.savefig('EjF')
+    plt.show()
+    plt.tight_layout()
 
 def armar_sistema(A_sorted):
     A = []
