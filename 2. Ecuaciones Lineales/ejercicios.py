@@ -212,11 +212,28 @@ def ejercicioB(A,b):
     print(xJac[nJac])
     print("\nla misma se alacanzo en {} iteraciones, con un error relativo de {}".format(str(nJac),str(round(errJac[nJac],10))))
     print("\n --------------------------- \n")
+
+    file=xJac[nJac]
+    filename='EJ B xJac'
+    ext=".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
+    
     xGS , errGS  , nGS   = xGaussSeidel(A,b,verbose=True)
     print("\nLa solucion por el metodo de xGauss-Seidel es :")
     print(xGS[nGS])
     print("\nla misma se alacanzo en {} iteraciones, con un error relativo de {}".format(str(nGS),str(round(errGS[nGS],10))))
     print("\n --------------------------- \n")
+
+    file=xGS[nGS]
+    filename='EJ B xGS'
+    ext=".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
 
     return xJac[nJac] , xGS[nGS]
 
@@ -235,6 +252,9 @@ def ejercicioC(A,b):
 
     df=pd.DataFrame(np.c_[np.transpose(w_list),n_sor],columns=['w','n'])
     print(df)
+
+    df.to_csv(path_or_buf='data\\EJ C Tabla.csv')
+
     n_min=df.n.min()
     w_min=df[df.n==n_min].w
     print("\nPor lo que se adopta el w tal que n sea minimo \n")
@@ -244,6 +264,15 @@ def ejercicioC(A,b):
     xSOR = SOR(A,b,w_min)[0][-1]
     print("X_wmin=\n")
     print(xSOR)
+
+    
+    file=xSOR
+    filename='EJ D xSor'
+    ext=".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
 
     return w_min , n_min , xSOR
 
@@ -263,6 +292,8 @@ def ejercicioD(A,b,xGauss,xJac,xGS,xSOR):
     print("Los errores relativos de cada metodo respecto de el metodo directo \nde Gauss en norma Linf son de : \n")
     print(df)
     print("\n ---------------------")
+
+    df.to_csv(path_or_buf='data\\EJ D.csv')
     return df
 
 def ejercicioE(A, b, RQ_POS):
@@ -276,10 +307,15 @@ def ejercicioE(A, b, RQ_POS):
         print(x)
         print("\n")
         
-        np.savetxt('Ej E xGauss.csv',  
-           xGauss_rq, 
-           delimiter =", ",  
-           fmt ='% f')
+
+        file=xGauss_rq
+        filename='Ej E xGauss'
+        ext='.csv'
+        np.savetxt("data\\"+filename+ext,  
+            file, 
+            delimiter =", ",  
+            fmt ='% f')
+
     
     A[RQ_POS[0]][RQ_POS[1]] = aux
 
@@ -299,7 +335,31 @@ def ejercicioF(A,b,xGauss,w_min):
     xSOR , errSOR , nSOR   = SOR(A,b,w_min,tol=tol,error=1,Xref=Xref)
 
     X=[xJac[-1],xGS[-1],xSOR[-1]]
+    print(X)
+
+    file    = X[0]
+    filename='EJ F xJAc'
+    ext     =".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
     
+    file    = X[1]
+    filename='EJ F xGS'
+    ext     =".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
+    
+    file    = X[2]
+    filename='EJ F xSOR'
+    ext     =".csv"
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
 
     plt.style.use('ggplot')
     error_plot=plt.figure(figsize=(25,15))
