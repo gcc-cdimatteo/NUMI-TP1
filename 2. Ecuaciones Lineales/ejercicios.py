@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import norm as norm
 import pandas as pd
+import seaborn as sns
 #import pandas as pd
 
 ### Funciones AUXILIARES
@@ -240,7 +241,7 @@ def ejercicioB(A,b):
 def ejercicioC(A,b):
     print("Ejercicio C\n ----------------")
     print("Se adoptan los valores de w =")
-    w_list=np.linspace(0.25,1,10)
+    w_list=np.linspace(0.25,2,10)
     print(w_list)
     err=[]
     n_sor=[]
@@ -251,9 +252,9 @@ def ejercicioC(A,b):
         n_sor.append(n_i)
 
     df=pd.DataFrame(np.c_[np.transpose(w_list),n_sor],columns=['w','n'])
-    print(df)
+    print(df.sort_values(by='n',axis=0,inplace=True))
 
-    df.to_csv(path_or_buf='data\\EJ C Tabla.csv')
+    df.to_csv(path_or_buf='data\\EJ C Tabla.csv',index=False)
 
     n_min=df.n.min()
     w_min=df[df.n==n_min].w
@@ -293,7 +294,7 @@ def ejercicioD(A,b,xGauss,xJac,xGS,xSOR):
     print(df)
     print("\n ---------------------")
 
-    df.to_csv(path_or_buf='data\\EJ D.csv')
+    df.to_csv(path_or_buf='data\\EJ D.csv',index=False)
     return df
 
 def ejercicioE(A, b, RQ_POS):
@@ -304,18 +305,30 @@ def ejercicioE(A, b, RQ_POS):
         A[RQ_POS[0]][RQ_POS[1]] = rq
         x=eliminacion_xGaussiana(A,b)[2][0]
         xGauss_rq.append(x)
-        print(x)
         print("\n")
-        
 
-        file=xGauss_rq
-        filename='Ej E xGauss'
-        ext='.csv'
-        np.savetxt("data\\"+filename+ext,  
-            file, 
-            delimiter =", ",  
-            fmt ='% f')
+    file=xGauss_rq
+    filename='Ej E xGauss'
+    ext='.csv'
+    np.savetxt("data\\"+filename+ext,  
+        file, 
+        delimiter =", ",  
+        fmt ='% f')
+    
+    df=pd.DataFrame(data=xGauss_rq,columns=['X1','X2','X3','X4','X5'],index=RQ)
+    print(df)
 
+    plt.style.use('ggplot')
+    fig=plt.figure(figsize=(20,10))
+    ax =fig.add_subplot(111)
+    sns.lineplot(data=df)
+    plt.title('Componentes de la solución X para distintos valores de RQ',fontsize=30)
+    plt.xlabel(xlabel='RQ',fontsize=30)
+    plt.legend(fontsize=20)
+    ax.xaxis.set(ticks=RQ)
+    plt.savefig('Ej E')
+    plt.show()
+    # df.plot.line()
     
     A[RQ_POS[0]][RQ_POS[1]] = aux
 
