@@ -2,6 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import norm as norm
+import pandas as pd
 #import pandas as pd
 
 ### Funciones AUXILIARES
@@ -21,7 +22,7 @@ def fila_triangulada(matriz, pos_fila):
             if i > j and matriz[i][j] != 0: return False
     return True
 
-def eliminacion_gaussiana(A,b):
+def eliminacion_xGaussiana(A,b):
     # Ordeno
     dim = len(A)
     filA = {}
@@ -110,12 +111,12 @@ def jacobi     (A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
         if n>0 and err[n] < tol:break
     return x, err, iteraciones-1
 
-def GaussSeidel(A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
+def xGaussSeidel(A,b,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
     # Esta funcion devuelve:
     # x   = matriz cuya i-sima columna es la i-esima iteracion de X por jacobi
     # err = vector cuyo i-esimo valor es el error relativo entre las iteraciones x[n] y x[n+1] 
     # n   = numero de iteraciones hasta detenerse el algoritmo
-    print("GAUSS SEIDEL :")
+    print("xGauss SEIDEL :")
     A = np.array(A)
     nA,mA = np.shape(A)
     b = np.array(b)
@@ -176,7 +177,7 @@ def SOR        (A,b,w,x0=None,n_iter=1000,tol=0.0001,verbose=False,density=5):
 ### Funciones EJERCICIOS
 
 def ejercicioA(A,b):
-    A_triangulada, b, vector_x = eliminacion_gaussiana(A, b)
+    A_triangulada, b, vector_x = eliminacion_xGaussiana(A, b)
     #Imprimo                    
     for elem in A_triangulada:
         print(elem)
@@ -186,7 +187,7 @@ def ejercicioA(A,b):
     print("SOL:")
     for elem in vector_x[0]:
         print(elem)
-    return
+    return vector_x
 
 def ejercicioB(A,b):
     print("Ejercicio B"+"\n ----------------------------")
@@ -195,11 +196,13 @@ def ejercicioB(A,b):
     print(xJac[nJac])
     print("\nla misma se alacanzo en {} iteraciones, con un error relativo de {}".format(str(nJac),str(round(errJac[nJac],10))))
     print("\n --------------------------- \n")
-    xGS , errGS  , nGS   = GaussSeidel(A,b,verbose=True)
-    print("\nLa solucion por el metodo de Gauss-Seidel es :")
+    xGS , errGS  , nGS   = xGaussSeidel(A,b,verbose=True)
+    print("\nLa solucion por el metodo de xGauss-Seidel es :")
     print(xGS[nGS])
     print("\nla misma se alacanzo en {} iteraciones, con un error relativo de {}".format(str(nGS),str(round(errGS[nGS],10))))
     print("\n --------------------------- \n")
+
+    return xJac[nJac] , xGS[nGS]
 
 def ejercicioC(A,b):
     print("Ejercicio C\n ----------------")
@@ -222,7 +225,9 @@ def ejercicioC(A,b):
     print(df[df.n==n_min])
     print("\n ---------------")
 
-    return w_min , n_min
+    xSOR = SOR(A,b,w_min)[0][-1]
+
+    return w_min , n_min , xSOR
 
 def modulo(vec): # vec = [nx1]
     tot = 0
@@ -230,21 +235,24 @@ def modulo(vec): # vec = [nx1]
         tot += vec[0][i]*vec[0][i]
     return math.sqrt(tot)
 
-def ejercicioD():
-    # gauss = eliminacion_gaussiana()
-    # jacobi = jacobi() - gauss
-    # gauss_seidel = gauss_seidel() - gauss
-    # sor = sor() - gauss
-    # modulo_res = map(modulo, [jacobi, gauss_seidel, sor])
-    # print(max(modulo))
-    return
+def ejercicioD(A,b,xGauss,xJac,xGS,xSOR):
+    print("\nEJERCICIO D\n")
+    errJac  = Linf(xJac   - xGauss)/Linf(xGauss)
+    errGS   = Linf(xGS    - xGauss)/Linf(xGauss)
+    errSOR  = Linf(xSOR   - xGauss)/Linf(xGauss)
+    err_ = [errJac, errGS, errSOR]
+    df=pd.DataFrame(np.array(err_).reshape((1,3)),columns=['Jac','GS','SOR'])
+    print("Los errores relativos de cada metodo respecto de el metodo directo \nde Gauss en norma Linf son de : \n")
+    print(df)
+    print("\n ---------------------")
+    return df
 
 def ejercicioE(A, b, RQ_POS):
     aux = A[RQ_POS[0]][RQ_POS[1]]
     res = []
     for v in [0.2, 0.3, 0.4, 0.5, 0.6]:
         A[RQ_POS[0]][RQ_POS[1]] = v
-        res.append(eliminacion_gaussiana(A,b)[2])
+        res.append(eliminacion_xGaussiana(A,b)[2])
     print(res)
     modulo_res = list(map(modulo, res))
     print(modulo_res)
@@ -281,15 +289,19 @@ def main():
                                     [0.0, 0.0, 2.0, 0.0, 7.0, 5.0]
                                 ]
     A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
-    ej = [ "A" ]
+    
+    ej = [ "A","B","C","D" ]
     if "A" in ej:
-        ejercicioA(A,b)
+        xGauss = np.array(ejercicioA(A,b))
+
+    A,b = armar_sistema(MICROORGANISMO_CRECIMIENTO)
+    
     if "B" in ej:
-        ejercicioB(A,b)
+        xJac  , xGS   = ejercicioB(A,b)
     if "C" in ej:
-        w_min , n_min = ejercicioC(A,b)
+        w_min , n_min , xSOR = ejercicioC(A,b)
     if "D" in ej:
-        ejercicioD()
+        ejercicioD(A,b,xGauss,xJac,xGS,xSOR)
     if "E" in ej:
         ejercicioE(A, b, RQ_POS)
     if "F" in ej:
