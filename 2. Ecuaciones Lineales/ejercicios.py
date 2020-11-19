@@ -242,6 +242,8 @@ def ejercicioC(A,b):
     print("\n ---------------")
 
     xSOR = SOR(A,b,w_min)[0][-1]
+    print("X_wmin=\n")
+    print(xSOR)
 
     return w_min , n_min , xSOR
 
