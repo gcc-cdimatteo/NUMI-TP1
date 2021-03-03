@@ -1,3 +1,6 @@
+from pylab import *
+import matplotlib.pyplot as plt
+
 HKEY_SEPARACION_PLACAS = 0.1
 HKEY_VISCOSIDAD = 0.95
 HKEY_GRADIENTE_PRESION = -105
@@ -63,6 +66,41 @@ def eliminacion_Gaussiana(A,b):
         x.append([_x])
     return A_sorted, b_sorted, x
 
+def calculo_incremento(aumento_final, valor_inicial, cant_iteraciones):
+    return aumento_final/(valor_inicial*cant_iteraciones)
+
+def solucion_exacta(paso_disc, y):
+    return (HKEY_GRADIENTE_PRESION/(2*HKEY_VISCOSIDAD))*y*(HKEY_SEPARACION_PLACAS-y)
+
+def imprimir_diferencias_finitas(res):
+    for paso_disc in res:
+        print(f"Discretizacion: {paso_disc}")
+        cont = 1
+        for r in res[paso_disc]:
+            print(f"{cont}. V(y= {r[0]}) = {r[1]}")
+            cont += 1
+        print()
+    print()
+    return
+
+def grafico_diferencias_finitas(res):
+    y = {}
+    x = {}
+    cont = 0
+    for paso_disc in res:
+        x[cont] = []
+        y[cont] = []
+        for r in res[paso_disc]:
+            x[cont].append(r[0])
+            y[cont].append(r[1])
+        #p = arange(y[-1])  
+        cont += 1
+
+    plot(x[2], y[0], 'b.', x[2], y[1], 'rd', x[2], y[2], 'g^')
+    show()
+    
+    return
+
 def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOSIDAD):
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
@@ -89,10 +127,26 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
     return res
 
 def tiro():
+    res = {}
+    for paso_disc in HKEY_PASOS_DISCRETIZACION:
+        print(f"Discretizacion: {paso_disc}")
+        tiros = (20, 30)
+        res[paso_disc] = {}
+        for t in tiros:
+            print(f"Tiro: {t}")
+            res[paso_disc][t] = []
+            u = [[0]]
+            s = [[t]]
+            ##Resuelvo las Matrices de Discretizacion
+            n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
+            for i in range(n):
+                s.append([s[-1][0]+paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)])
+                u.append([u[-1][0]+(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)*s[-2][0]])
+            print(f"S: ")
+            _print(s)
+            print(f"U: ")
+            _print(u)
     return
-
-def calculo_incremento(aumento_final, valor_inicial, cant_iteraciones):
-    return aumento_final/(valor_inicial*cant_iteraciones)
 
 def sensibilidad():
     valor_inicial = 0.75
@@ -113,9 +167,6 @@ def sensibilidad():
         print(f"GRADIENTE DE PRESION = {HKEY_GRADIENTE_PRESION} Y VISCOSIDAD = {_visc}")
         imprimir_diferencias_finitas(diferencias_finitas(viscosidad=_visc))
     return
-
-def solucion_exacta(paso_disc, y):
-    return (HKEY_GRADIENTE_PRESION/(2*HKEY_VISCOSIDAD))*y*(HKEY_SEPARACION_PLACAS-y)
 
 def analisis_experimental():
     res_exp = diferencias_finitas()
@@ -142,31 +193,27 @@ def analisis_experimental():
         print()
     return
 
-def imprimir_diferencias_finitas(res):
-    for paso_disc in res:
-        print(f"Discretizacion: {paso_disc}")
-        cont = 1
-        for r in res[paso_disc]:
-            print(f"{cont}. V(y= {r[0]}) = {r[1]}")
-            cont += 1
-        print()
-    print()
-    return
-
 def main():
+    ej = ("A")
     ## A
-    print("-"*5+"Diferencias Finitas"+"-"*5)
-    res = diferencias_finitas()
-    imprimir_diferencias_finitas(res)
+    if "A" in ej:
+        print("-"*5+"Diferencias Finitas"+"-"*5)
+        res = diferencias_finitas()
+        #imprimir_diferencias_finitas(res)
+        grafico_diferencias_finitas(res)
     ## B
-    #tiro()
+    if "B" in ej:
+        tiro()
     ## C
-    print("-"*5+"Analisis de Sensibilidad"+"-"*5)
-    sensibilidad()
-    print()
+    if "C" in ej:
+        print("-"*5+"Analisis de Sensibilidad"+"-"*5)
+        sensibilidad()
+        print()
     ## D
-    print("-"*5+"Analisis Experimental"+"-"*5)
-    analisis_experimental()
+    if "D" in ej:
+        print("-"*5+"Analisis Experimental"+"-"*5)
+        analisis_experimental()
+
     return
 
 main()
