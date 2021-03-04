@@ -1,5 +1,5 @@
-from pylab import *
-import matplotlib.pyplot as plt
+import csv
+import os 
 
 HKEY_SEPARACION_PLACAS = 0.1
 HKEY_VISCOSIDAD = 0.95
@@ -83,24 +83,6 @@ def imprimir_diferencias_finitas(res):
     print()
     return
 
-def grafico_diferencias_finitas(res):
-    y = {}
-    x = {}
-    cont = 0
-    for paso_disc in res:
-        x[cont] = []
-        y[cont] = []
-        for r in res[paso_disc]:
-            x[cont].append(r[0])
-            y[cont].append(r[1])
-        #p = arange(y[-1])  
-        cont += 1
-
-    plot(x[2], y[0], 'b.', x[2], y[1], 'rd', x[2], y[2], 'g^')
-    show()
-    
-    return
-
 def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOSIDAD):
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
@@ -126,46 +108,111 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
             res[paso_disc].append((y[r][0], v[r][0]))
     return res
 
-def tiro():
+def tiro_euler():
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
-        print(f"Discretizacion: {paso_disc}")
+        #print(f"Discretizacion: {paso_disc}")
         tiros = (20, 30)
         res[paso_disc] = {}
         for t in tiros:
-            print(f"Tiro: {t}")
+            #print(f"Tiro: {t}")
             res[paso_disc][t] = []
             u = [[0]]
             s = [[t]]
-            ##Resuelvo las Matrices de Discretizacion
+            ##Armo las Matrices de Discretizacion
             n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
             for i in range(n):
                 s.append([s[-1][0]+paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)])
                 u.append([u[-1][0]+(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)*s[-2][0]])
-            print(f"S: ")
-            _print(s)
-            print(f"U: ")
-            _print(u)
-    return
+            res[paso_disc][t].append(s)
+            res[paso_disc][t].append(u)
+        ##Armo Matriz de Resolución
+        A = []
+        b = []
+        for t in tiros:
+            A.append([res[paso_disc][t][1][-1][0], 1])
+            b.append([res[paso_disc][t][0][0][0]])
+        _A, _b, x = eliminacion_Gaussiana(A, b)
+        res[paso_disc]['k'] = x
+    return res
+
+def tiro_runge_kuta_4():
+    res = {}
+    for paso_disc in HKEY_PASOS_DISCRETIZACION:
+        #print(f"Discretizacion: {paso_disc}")
+        tiros = (20, 30)
+        res[paso_disc] = {}
+        s_k1 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)
+        s_k2 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + 0.5*s_k1)
+        s_k3 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + 0.5*s_k2)
+        s_k4 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + s_k3)
+        for t in tiros:
+            #print(f"Tiro: {t}")
+            res[paso_disc][t] = []
+            u = [[0]]
+            s = [[t]]
+            ##Armo las Matrices de Discretizacion
+            n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
+            for i in range(n):
+                s.append([s[-1][0]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4)])
+                u_k1 = paso_disc*s[-2][0]
+                u_k2 = paso_disc*(s[-2][0] + 0.5*u_k1)
+                u_k3 = paso_disc*(s[-2][0] + 0.5*u_k2)
+                u_k4 = paso_disc*(s[-2][0] + u_k3)
+                u.append([u[-1][0]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4)])
+            res[paso_disc][t].append(s)
+            res[paso_disc][t].append(u)
+        ##Armo Matriz de Resolución
+        A = []
+        b = []
+        for t in tiros:
+            A.append([res[paso_disc][t][1][-1][0], 1])
+            b.append([res[paso_disc][t][0][0][0]])
+        _A, _b, x = eliminacion_Gaussiana(A, b)
+        #_print(x)
+        res[paso_disc]['k'] = x
+    return res
+
+def tiro():
+    euler = tiro_euler()
+    runge_kuta_4 = tiro_runge_kuta_4()
 
 def sensibilidad():
+    res = []
     valor_inicial = 0.75
     iteraciones = 20
     incremento = calculo_incremento(1.25, valor_inicial, iteraciones)
+    #Guardo valores iniciales
+    r = diferencias_finitas()
+    for paso_disc in r:
+        for _r in r[paso_disc]:
+            res.append([paso_disc, HKEY_GRADIENTE_PRESION, HKEY_VISCOSIDAD, _r[0], _r[1]])
     #Vario gradiente y dejo constante viscosidad
     grad = HKEY_GRADIENTE_PRESION*valor_inicial
     _grad = 0
     for i in range(iteraciones):
         _grad += grad*incremento
-        print(f"GRADIENTE DE PRESION = {_grad} Y VISCOSIDAD = {HKEY_VISCOSIDAD}")
-        imprimir_diferencias_finitas(diferencias_finitas(gradiente=_grad))
+        r = diferencias_finitas(gradiente=_grad)
+        #Guardo
+        for paso_disc in r:
+            for _r in r[paso_disc]:
+                res.append([paso_disc, _grad, HKEY_VISCOSIDAD, _r[0], _r[1]])
     #Vario viscosidad y dejo constante gradiente
     visc = HKEY_VISCOSIDAD*valor_inicial
     _visc = 0
     for i in range(iteraciones):
         _visc += visc*incremento
-        print(f"GRADIENTE DE PRESION = {HKEY_GRADIENTE_PRESION} Y VISCOSIDAD = {_visc}")
-        imprimir_diferencias_finitas(diferencias_finitas(viscosidad=_visc))
+        r = diferencias_finitas(viscosidad=_visc)
+        #Guardo
+        for paso_disc in r:
+            for _r in r[paso_disc]:
+                res.append([paso_disc, HKEY_GRADIENTE_PRESION, _visc, _r[0], _r[1]])
+    #Exporto a CSV
+    with open(f'{os.path.dirname(os.path.realpath(__file__))}/ej_c.csv', 'w') as csvfile:
+        w = csv.writer(csvfile, delimiter=',')
+        w.writerow(["PASO DISCRETIZACION", "GRADIENTE DE PRESION", "VISCOSIDAD", "Y", "V"])
+        for l in res:
+            w.writerow(l)
     return
 
 def analisis_experimental():
@@ -194,13 +241,12 @@ def analisis_experimental():
     return
 
 def main():
-    ej = ("A")
+    ej = ("C")
     ## A
     if "A" in ej:
         print("-"*5+"Diferencias Finitas"+"-"*5)
         res = diferencias_finitas()
         #imprimir_diferencias_finitas(res)
-        grafico_diferencias_finitas(res)
     ## B
     if "B" in ej:
         tiro()
