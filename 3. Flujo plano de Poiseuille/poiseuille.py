@@ -6,6 +6,8 @@ HKEY_VISCOSIDAD = 0.95
 HKEY_GRADIENTE_PRESION = -105
 HKEY_PASOS_DISCRETIZACION = [0.025, 0.010, 0.005]
 
+GPsM= HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD
+
 def _print(mat):
     for fil in mat:
         print(fil)
@@ -88,6 +90,11 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
         res[paso_disc] = []
         ##Armo Matriz de Velocidades
+        
+        ## !!! Esta matriz asi definida da bien solo porque V_0 = V_n+1 = 0 !!!
+        ## En realidad habria que tener en cuenta esos dos valores haciendo una 
+        ## matriz mas grande o restandolos de b_1 y b_n .
+         
         n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
         A = []
         y = [[paso_disc]]
@@ -95,7 +102,7 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
         for i in range(n):
             A.append([])
             y.append([y[-1][0]+paso_disc])
-            b.append([(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)*paso_disc*paso_disc])
+            b.append([(GPsM)*paso_disc*paso_disc])
             for j in range(n):
                 if j == i: A[i].append(-2)
                 elif j == i-1: A[i].append(1)
@@ -107,6 +114,8 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
         for r in range(len(v)):
             res[paso_disc].append((y[r][0], v[r][0]))
     return res
+
+    ## ☻
 
 def tiro_euler():
     res = {}
@@ -122,8 +131,8 @@ def tiro_euler():
             ##Armo las Matrices de Discretizacion
             n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
             for i in range(n):
-                s.append([s[-1][0]+paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)])
-                u.append([u[-1][0]+(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)*s[-2][0]])
+                s.append([s[-1][0]+paso_disc*(GPsM)])
+                u.append([u[-1][0]+(GPsM)*s[-2][0]])
             res[paso_disc][t].append(s)
             res[paso_disc][t].append(u)
         ##Armo Matriz de Resolución
@@ -132,20 +141,41 @@ def tiro_euler():
         for t in tiros:
             A.append([res[paso_disc][t][1][-1][0], 1])
             b.append([res[paso_disc][t][0][0][0]])
+        ## _print(A)
+        ## _print(b)
         _A, _b, x = eliminacion_Gaussiana(A, b)
-        res[paso_disc]['k'] = x
+        res[paso_disc]['Xk'] = x
+        
+        t_k = -x[0][0]/(x[1][0])
+        
+        u = [[0]]
+        s = [[t_k]]
+
+        for i in range(n):
+            s.append([s[-1][0]+paso_disc*(GPsM)])
+            u.append([u[-1][0]+(GPsM)*s[-2][0]])
+        
+        res[paso_disc]['k']=[]
+        res[paso_disc]['k'].append(s)
+        res[paso_disc]['k'].append(u)
+        
     return res
 
+    ## Esta funcion devuelve el diccionario [res] con las claves [paso_disc] [[t] ; [k]],
+    ## la clave t contiene los resutados de las iteraciones para los valores semilla del tiro.
+    ## La clave k tiene las aproximaciones finales del tiro que satisface la condicion de borde en y=d.}
+    ## Falta agregar la solucion por metodo de EULER usando el coeficeinte de tiro k hallado.
+    
 def tiro_runge_kuta_4():
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
         #print(f"Discretizacion: {paso_disc}")
         tiros = (20, 30)
         res[paso_disc] = {}
-        s_k1 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD)
-        s_k2 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + 0.5*s_k1)
-        s_k3 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + 0.5*s_k2)
-        s_k4 = paso_disc*(HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD + s_k3)
+        s_k1 = paso_disc*(GPsM)
+        s_k2 = paso_disc*(GPsM + 0.5*s_k1)
+        s_k3 = paso_disc*(GPsM + 0.5*s_k2)
+        s_k4 = paso_disc*(GPsM + s_k3)
         for t in tiros:
             #print(f"Tiro: {t}")
             res[paso_disc][t] = []
@@ -170,12 +200,36 @@ def tiro_runge_kuta_4():
             b.append([res[paso_disc][t][0][0][0]])
         _A, _b, x = eliminacion_Gaussiana(A, b)
         #_print(x)
-        res[paso_disc]['k'] = x
+        res[paso_disc]['Xk'] = x
+        
+        t_k = -x[0][0]/(x[1][0])
+        
+        u = [[0]]
+        s = [[t_k]]
+
+        for i in range(n):
+            s.append([s[-1][0]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4)])
+            u_k1 = paso_disc*s[-2][0]
+            u_k2 = paso_disc*(s[-2][0] + 0.5*u_k1)
+            u_k3 = paso_disc*(s[-2][0] + 0.5*u_k2)
+            u_k4 = paso_disc*(s[-2][0] + u_k3)
+            u.append([u[-1][0]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4)])
+        
+        res[paso_disc]['k']=[]
+        res[paso_disc]['k'].append(s)
+        res[paso_disc]['k'].append(u)
+        
     return res
+
+    ## Esta funcion devuelve el diccionario [res] con las claves [paso_disc] [[t] ; [k]],
+    ## la clave t contiene los resutados de las iteraciones para los valores semilla del tiro.
+    ## La clave k tiene las aproximaciones finales del tiro que satisface la condicion de borde en y=d.}
+    ## Falta agregar la solucion por metodo de EULER usando el coeficeinte de tiro k hallado.
 
 def tiro():
     euler = tiro_euler()
     runge_kuta_4 = tiro_runge_kuta_4()
+    
 
 def sensibilidad():
     res = []
@@ -241,7 +295,7 @@ def analisis_experimental():
     return
 
 def main():
-    ej = ("C")
+    ej = ("B")
     ## A
     if "A" in ej:
         print("-"*5+"Diferencias Finitas"+"-"*5)
