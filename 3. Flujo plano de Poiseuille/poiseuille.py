@@ -149,9 +149,9 @@ def tiro_euler():
         ## _print(A)
         ## _print(b)
         _A, _b, x = eliminacion_Gaussiana(A, b)
-        res[paso_disc]['Xk'] = x
         
-        t_k = -x[1][0]/(x[0][0])
+        t_k = x[1][0]
+        res[paso_disc]['t_k'] = t_k
         
         u = [0]
         s = [t_k]
@@ -200,9 +200,9 @@ def tiro_runge_kuta_4():
             b.append([res[paso_disc][t][0][0]])
         _A, _b, x = eliminacion_Gaussiana(A, b)
         #_print(x)
-        res[paso_disc]['Xk'] = x
         
-        t_k = -x[1][0]/(x[0][0])
+        t_k = (x[1][0])
+        res[paso_disc]['t_k'] = t_k
         
         u = [0]
         s = [t_k]
@@ -294,7 +294,7 @@ def main():
     ej = ("A",'B')
     ## A
     if "A" in ej:
-        print("-"*5+"Diferencias Finitas"+"-"*5)
+        print('\n'+"-"*5+"Diferencias Finitas"+"-"*5+'\n')
         res = diferencias_finitas()
         # imprimir_diferencias_finitas(res)
         for h in HKEY_PASOS_DISCRETIZACION:
@@ -305,13 +305,22 @@ def main():
             df.to_csv(name)
     ## B
     if "B" in ej:
-        print("-"*5+"Metodo del tiro"+"-"*5)
+        print('\n'+"-"*5+"Metodo del tiro"+"-"*5+'\n')
         euler , rk4 = tiro()
         for h in HKEY_PASOS_DISCRETIZACION:
+            print('\nh='+str(h)+'\n')
+            
+            t=euler[h]['t_k']
+            print('\n'+'Euler:\tt='+str(t)+'\n')
             df=pd.DataFrame(np.array(euler[h]['k']).T,columns=['y','v(y)'])
+            print(df)
             name='Res Tiro Euler - h='+str(h)+'.csv'
             df.to_csv(name)
+
+            t=rk4[h]['t_k']
+            print('\n'+'RG4:\tt='+str(t)+'\n')
             df=pd.DataFrame(np.array(rk4[h]['k']).T,columns=['y','v(y)'])
+            print(df)
             name='Res Tiro RK4 - h='+str(h)+'.csv'
             df.to_csv(name)
     ## C
