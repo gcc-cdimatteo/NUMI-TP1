@@ -131,21 +131,24 @@ def tiro_euler():
         for t in tiros:
             #print(f"Tiro: {t}")
             res[paso_disc][t] = []
+            y = [0]
             u = [0]
             s = [t]
             ##Armo las Matrices de Discretizacion
             n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
-            for i in range(n+2):
+            for i in range(n+1):
+                y.append(y[-1]+paso_disc)
                 s.append(s[-1]+paso_disc*(GPsM))
                 u.append(u[-1]+paso_disc*s[-2])
-            res[paso_disc][t].append(s)
+            res[paso_disc][t].append(y)
             res[paso_disc][t].append(u)
+            res[paso_disc][t].append(s)
         ##Armo Matriz de Resolución
         A = []
         b = []
         for t in tiros:
             A.append([res[paso_disc][t][1][-1], 1])
-            b.append([res[paso_disc][t][0][0]])
+            b.append([res[paso_disc][t][2][0]])
         ## _print(A)
         ## _print(b)
         _A, _b, x = eliminacion_Gaussiana(A, b)
@@ -153,16 +156,19 @@ def tiro_euler():
         t_k = x[1][0]
         res[paso_disc]['t_k'] = t_k
         
+        y = [0]
         u = [0]
         s = [t_k]
 
-        for i in range(n):
+        for i in range(n+1):
+            y.append(y[-1]+paso_disc)
             s.append(s[-1]+paso_disc*(GPsM))
             u.append(u[-1]+paso_disc*s[-2])
         
         res[paso_disc]['k']=[]
-        res[paso_disc]['k'].append(s)
+        res[paso_disc]['k'].append(y)
         res[paso_disc]['k'].append(u)
+        res[paso_disc]['k'].append(s)
         
     return res
    
@@ -179,35 +185,40 @@ def tiro_runge_kuta_4():
         for t in tiros:
             #print(f"Tiro: {t}")
             res[paso_disc][t] = []
+            y = [0]
             u = [0]
             s = [t]
             ##Armo las Matrices de Discretizacion
-            n = int(HKEY_SEPARACION_PLACAS/paso_disc)
+            n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
             for i in range(n+1):
+                y.append(y[-1]+paso_disc)
                 s.append(s[-1]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4))
                 u_k1 = paso_disc*s[-2]
                 u_k2 = paso_disc*(s[-2] + 0.5*u_k1)
                 u_k3 = paso_disc*(s[-2] + 0.5*u_k2)
                 u_k4 = paso_disc*(s[-2] + u_k3)
                 u.append(u[-1]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4))
-            res[paso_disc][t].append(s)
+            res[paso_disc][t].append(y)
             res[paso_disc][t].append(u)
+            res[paso_disc][t].append(s)
         ##Armo Matriz de Resolución
         A = []
         b = []
         for t in tiros:
             A.append([res[paso_disc][t][1][-1], 1])
-            b.append([res[paso_disc][t][0][0]])
+            b.append([res[paso_disc][t][2][0]])
         _A, _b, x = eliminacion_Gaussiana(A, b)
         #_print(x)
         
         t_k = (x[1][0])
         res[paso_disc]['t_k'] = t_k
         
+        y = [0]
         u = [0]
         s = [t_k]
 
-        for i in range(n):
+        for i in range(n+1):
+            y.append(y[-1]+paso_disc)
             s.append(s[-1]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4))
             u_k1 = paso_disc*s[-2]
             u_k2 = paso_disc*(s[-2] + 0.5*u_k1)
@@ -216,8 +227,9 @@ def tiro_runge_kuta_4():
             u.append(u[-1]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4))
         
         res[paso_disc]['k']=[]
-        res[paso_disc]['k'].append(s)
+        res[paso_disc]['k'].append(y)
         res[paso_disc]['k'].append(u)
+        res[paso_disc]['k'].append(s)
         
     return res
 
@@ -291,7 +303,7 @@ def analisis_experimental():
     return
 
 def main():
-    ej = ("A",'B')
+    ej = ('B')
     ## A
     if "A" in ej:
         print('\n'+"-"*5+"Diferencias Finitas"+"-"*5+'\n')
@@ -312,14 +324,14 @@ def main():
             
             t=euler[h]['t_k']
             print('\n'+'Euler:\tt='+str(t)+'\n')
-            df=pd.DataFrame(np.array(euler[h]['k']).T,columns=['y','v(y)'])
+            df=pd.DataFrame(np.array(euler[h]['k']).T,columns=['y','v(y)','v´(y)'])
             print(df)
             name='Res Tiro Euler - h='+str(h)+'.csv'
             df.to_csv(name)
 
             t=rk4[h]['t_k']
-            print('\n'+'RG4:\tt='+str(t)+'\n')
-            df=pd.DataFrame(np.array(rk4[h]['k']).T,columns=['y','v(y)'])
+            print('\n'+'RK4:\tt='+str(t)+'\n')
+            df=pd.DataFrame(np.array(rk4[h]['k']).T,columns=['y','v(y)','v´(y)'])
             print(df)
             name='Res Tiro RK4 - h='+str(h)+'.csv'
             df.to_csv(name)
