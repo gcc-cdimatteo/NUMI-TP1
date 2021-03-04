@@ -1,3 +1,6 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 import csv
 import os 
 
@@ -72,14 +75,16 @@ def calculo_incremento(aumento_final, valor_inicial, cant_iteraciones):
     return aumento_final/(valor_inicial*cant_iteraciones)
 
 def solucion_exacta(paso_disc, y):
-    return (HKEY_GRADIENTE_PRESION/(2*HKEY_VISCOSIDAD))*y*(HKEY_SEPARACION_PLACAS-y)
+    v_y= (HKEY_GRADIENTE_PRESION/(2*HKEY_VISCOSIDAD))*y*(HKEY_SEPARACION_PLACAS-y)
+    dvdy_y= (HKEY_GRADIENTE_PRESION/(2*HKEY_VISCOSIDAD))*(HKEY_SEPARACION_PLACAS-2*y)
+    return v_y , dvdy_y
 
 def imprimir_diferencias_finitas(res):
     for paso_disc in res:
         print(f"Discretizacion: {paso_disc}")
         cont = 1
         for r in res[paso_disc]:
-            print(f"{cont}. V(y= {r[0]}) = {r[1]}")
+            print("{:2}. V(y= {:.2e}) = {:.4e}".format(cont,r[0],r[1]))
             cont += 1
         print()
     print()
@@ -121,56 +126,51 @@ def tiro_euler():
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
         #print(f"Discretizacion: {paso_disc}")
-        tiros = (20, 30)
+        tiros = (1, 5)
         res[paso_disc] = {}
         for t in tiros:
             #print(f"Tiro: {t}")
             res[paso_disc][t] = []
-            u = [[0]]
-            s = [[t]]
+            u = [0]
+            s = [t]
             ##Armo las Matrices de Discretizacion
             n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
-            for i in range(n):
-                s.append([s[-1][0]+paso_disc*(GPsM)])
-                u.append([u[-1][0]+(GPsM)*s[-2][0]])
+            for i in range(n+2):
+                s.append(s[-1]+paso_disc*(GPsM))
+                u.append(u[-1]+paso_disc*s[-2])
             res[paso_disc][t].append(s)
             res[paso_disc][t].append(u)
         ##Armo Matriz de Resolución
         A = []
         b = []
         for t in tiros:
-            A.append([res[paso_disc][t][1][-1][0], 1])
-            b.append([res[paso_disc][t][0][0][0]])
+            A.append([res[paso_disc][t][1][-1], 1])
+            b.append([res[paso_disc][t][0][0]])
         ## _print(A)
         ## _print(b)
         _A, _b, x = eliminacion_Gaussiana(A, b)
         res[paso_disc]['Xk'] = x
         
-        t_k = -x[0][0]/(x[1][0])
+        t_k = -x[1][0]/(x[0][0])
         
-        u = [[0]]
-        s = [[t_k]]
+        u = [0]
+        s = [t_k]
 
         for i in range(n):
-            s.append([s[-1][0]+paso_disc*(GPsM)])
-            u.append([u[-1][0]+(GPsM)*s[-2][0]])
+            s.append(s[-1]+paso_disc*(GPsM))
+            u.append(u[-1]+paso_disc*s[-2])
         
         res[paso_disc]['k']=[]
         res[paso_disc]['k'].append(s)
         res[paso_disc]['k'].append(u)
         
     return res
-
-    ## Esta funcion devuelve el diccionario [res] con las claves [paso_disc] [[t] ; [k]],
-    ## la clave t contiene los resutados de las iteraciones para los valores semilla del tiro.
-    ## La clave k tiene las aproximaciones finales del tiro que satisface la condicion de borde en y=d.}
-    ## Falta agregar la solucion por metodo de EULER usando el coeficeinte de tiro k hallado.
-    
+   
 def tiro_runge_kuta_4():
     res = {}
     for paso_disc in HKEY_PASOS_DISCRETIZACION:
         #print(f"Discretizacion: {paso_disc}")
-        tiros = (20, 30)
+        tiros = (1, 5)
         res[paso_disc] = {}
         s_k1 = paso_disc*(GPsM)
         s_k2 = paso_disc*(GPsM + 0.5*s_k1)
@@ -179,41 +179,41 @@ def tiro_runge_kuta_4():
         for t in tiros:
             #print(f"Tiro: {t}")
             res[paso_disc][t] = []
-            u = [[0]]
-            s = [[t]]
+            u = [0]
+            s = [t]
             ##Armo las Matrices de Discretizacion
-            n = int(HKEY_SEPARACION_PLACAS/paso_disc)-1
-            for i in range(n):
-                s.append([s[-1][0]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4)])
-                u_k1 = paso_disc*s[-2][0]
-                u_k2 = paso_disc*(s[-2][0] + 0.5*u_k1)
-                u_k3 = paso_disc*(s[-2][0] + 0.5*u_k2)
-                u_k4 = paso_disc*(s[-2][0] + u_k3)
-                u.append([u[-1][0]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4)])
+            n = int(HKEY_SEPARACION_PLACAS/paso_disc)
+            for i in range(n+1):
+                s.append(s[-1]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4))
+                u_k1 = paso_disc*s[-2]
+                u_k2 = paso_disc*(s[-2] + 0.5*u_k1)
+                u_k3 = paso_disc*(s[-2] + 0.5*u_k2)
+                u_k4 = paso_disc*(s[-2] + u_k3)
+                u.append(u[-1]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4))
             res[paso_disc][t].append(s)
             res[paso_disc][t].append(u)
         ##Armo Matriz de Resolución
         A = []
         b = []
         for t in tiros:
-            A.append([res[paso_disc][t][1][-1][0], 1])
-            b.append([res[paso_disc][t][0][0][0]])
+            A.append([res[paso_disc][t][1][-1], 1])
+            b.append([res[paso_disc][t][0][0]])
         _A, _b, x = eliminacion_Gaussiana(A, b)
         #_print(x)
         res[paso_disc]['Xk'] = x
         
-        t_k = -x[0][0]/(x[1][0])
+        t_k = -x[1][0]/(x[0][0])
         
-        u = [[0]]
-        s = [[t_k]]
+        u = [0]
+        s = [t_k]
 
         for i in range(n):
-            s.append([s[-1][0]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4)])
-            u_k1 = paso_disc*s[-2][0]
-            u_k2 = paso_disc*(s[-2][0] + 0.5*u_k1)
-            u_k3 = paso_disc*(s[-2][0] + 0.5*u_k2)
-            u_k4 = paso_disc*(s[-2][0] + u_k3)
-            u.append([u[-1][0]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4)])
+            s.append(s[-1]+(1/6)*(s_k1+2*s_k2+2*s_k3+s_k4))
+            u_k1 = paso_disc*s[-2]
+            u_k2 = paso_disc*(s[-2] + 0.5*u_k1)
+            u_k3 = paso_disc*(s[-2] + 0.5*u_k2)
+            u_k4 = paso_disc*(s[-2] + u_k3)
+            u.append(u[-1]+(1/6)*(u_k1+2*u_k2+2*u_k3+u_k4))
         
         res[paso_disc]['k']=[]
         res[paso_disc]['k'].append(s)
@@ -221,15 +221,11 @@ def tiro_runge_kuta_4():
         
     return res
 
-    ## Esta funcion devuelve el diccionario [res] con las claves [paso_disc] [[t] ; [k]],
-    ## la clave t contiene los resutados de las iteraciones para los valores semilla del tiro.
-    ## La clave k tiene las aproximaciones finales del tiro que satisface la condicion de borde en y=d.}
-    ## Falta agregar la solucion por metodo de EULER usando el coeficeinte de tiro k hallado.
-
 def tiro():
     euler = tiro_euler()
     runge_kuta_4 = tiro_runge_kuta_4()
-    
+
+    return euler, runge_kuta_4
 
 def sensibilidad():
     res = []
@@ -295,15 +291,29 @@ def analisis_experimental():
     return
 
 def main():
-    ej = ("B")
+    ej = ("A",'B')
     ## A
     if "A" in ej:
         print("-"*5+"Diferencias Finitas"+"-"*5)
         res = diferencias_finitas()
-        #imprimir_diferencias_finitas(res)
+        # imprimir_diferencias_finitas(res)
+        for h in HKEY_PASOS_DISCRETIZACION:
+            print('\nh='+str(h)+'\n')
+            df=pd.DataFrame(res[h],columns=['y','v(y)'])
+            print(df)
+            name='Res Dif Fin - h='+str(h)+'.csv'
+            df.to_csv(name)
     ## B
     if "B" in ej:
-        tiro()
+        print("-"*5+"Metodo del tiro"+"-"*5)
+        euler , rk4 = tiro()
+        for h in HKEY_PASOS_DISCRETIZACION:
+            df=pd.DataFrame(np.array(euler[h]['k']).T,columns=['y','v(y)'])
+            name='Res Tiro Euler - h='+str(h)+'.csv'
+            df.to_csv(name)
+            df=pd.DataFrame(np.array(rk4[h]['k']).T,columns=['y','v(y)'])
+            name='Res Tiro RK4 - h='+str(h)+'.csv'
+            df.to_csv(name)
     ## C
     if "C" in ej:
         print("-"*5+"Analisis de Sensibilidad"+"-"*5)
