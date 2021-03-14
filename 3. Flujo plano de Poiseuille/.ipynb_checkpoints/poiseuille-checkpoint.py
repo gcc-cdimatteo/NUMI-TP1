@@ -11,13 +11,6 @@ HKEY_PASOS_DISCRETIZACION = [0.025, 0.010, 0.005]
 
 GPsM= HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD
 
-def add_top_column(df, top_col, inplace=True):
-    if not inplace:
-        df = df.copy()
-    
-    df.columns = pd.MultiIndex.from_product([[top_col], df.columns])
-    return df
-
 def _print(mat):
     for fil in mat:
         print(fil)
@@ -97,10 +90,9 @@ def imprimir_diferencias_finitas(res):
     print()
     return
 
-def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOSIDAD, h=HKEY_PASOS_DISCRETIZACION):
-    gpsm= HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD
+def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOSIDAD, gpsm=GPsM,h=HKEY_PASOS_DISCRETIZACION):
     res = {}
-    for paso_disc in h:
+    for paso_disc in HKEY_PASOS_DISCRETIZACION:
         res[paso_disc] = []
         ##Armo Matriz de Velocidades
         
@@ -114,12 +106,12 @@ def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOS
         b = []
         for i in range(n):
             A.append([])
-            y.append([y[-1][0]+paso_disc])            
+            y.append([y[-1][0]+paso_disc])
             b.append([(gpsm)*paso_disc*paso_disc])
             for j in range(n):
-                if   j == i  : A[i].append(-2)
-                elif j == i-1: A[i].append( 1)
-                elif j == i+1: A[i].append( 1)
+                if j == i: A[i].append(-2)
+                elif j == i-1: A[i].append(1)
+                elif j == i+1: A[i].append(1)
                 else: A[i].append(0)
         ##Resuelvo por Gauss
         _A, _b, v = eliminacion_Gaussiana(A,b)
@@ -248,55 +240,63 @@ def tiro():
     return euler, runge_kuta_4
 
 def sensibilidad():
+    dfV=pd.DataFrame()
     res = {}
-    dif_porc=0.25
-    valor_inicial = 1-dif_porc
-    iteraciones = 2
-    incremento = 2*dif_porc/(iteraciones-1)
+    res['original'] = {}
+    res['D_grad']   = {}
+    res['D_mu']     = {}
+    mse = {}
+    v_origninal={}
+    delta_porcentual=0.25
+    valor_inicial = 1-delta_porcentual
+    valor_final   = 1+delta_porcentual 
+    iteraciones = 3
+    incremento = calculo_incremento(valor_final, valor_inicial, iteraciones)
+
     #Guardo valores iniciales
     r = diferencias_finitas()
     for paso_disc in r:
-        df=pd.DataFrame(r[paso_disc],columns=['y','V(y)_0,0'])
-        # df=add_top_column(df,'Original')
-        # res[paso_disc].append(df)
-        res[paso_disc]=df
+        res['original'][paso_disc]  =   np.array(r[paso_disc][:][1])
+        v_origninal[paso_disc]      =   np.array(r[paso_disc][:][1])
+
     #Vario gradiente y dejo constante viscosidad
     grad = HKEY_GRADIENTE_PRESION*valor_inicial
+    _grad = 0
     for i in range(iteraciones):
-        _grad = grad * (1+i*incremento)
+        _grad += grad*incremento
         r = diferencias_finitas(gradiente=_grad)
         #Guardo
-        # res[paso_disc]['D_grad']=[]
         for paso_disc in r:
-            df=res[paso_disc]
-            df_temp=pd.DataFrame(np.array(r[paso_disc])[:,1],columns=[str(_grad)+';0'])
-            res[paso_disc]=pd.concat([df,df_temp],axis=1)
-            # df['V(y)_'+str(_grad)+',0']=r[paso_disc][1]
-            # res[paso_disc]['D_grad'].append(r[paso_disc])
+            mse=0
+            for _r in range(paso_disc):
+                mse += np.abs()
+            res['D_grad'][paso_disc]=[[_grad], [mse]]
+            # v_desviado = np.array(r[paso_disc])
+            # et  =v_desviado-v_origninal[paso_disc]
+            # mse =np.abs(et).mean()
+            # df=pd.DataFrame(data=r[paso_disc],columns=['y','v(y)'])
+            # name='v(y) - D_grad='
+
     #Vario viscosidad y dejo constante gradiente
-    visc = HKEY_VISCOSIDAD*valor_inicial
+    visc  = HKEY_VISCOSIDAD*valor_inicial
+    _visc = 0
     for i in range(iteraciones):
-        _visc = visc * (1+i*incremento)
+        _visc += visc*incremento
         r = diferencias_finitas(viscosidad=_visc)
         #Guardo
-        # res[paso_disc]['D_visc']=[]        
         for paso_disc in r:
-            df=res[paso_disc]
-            df_temp=pd.DataFrame(np.array(r[paso_disc])[:,1],columns=['0;'+str(_grad)])
-            res[paso_disc]=pd.concat([df,df_temp],axis=1)
-            # res[paso_disc]['D_visc'].append(r[paso_disc])
+            res['D_mu'][paso_disc]=[]
+            for _r in r[paso_disc]:
+                res['D_mu'][paso_disc].append([_visc,[_r[0], _r[1]]])
     #Exporto a CSV
     # with open(f'{os.path.dirname(os.path.realpath(__file__))}/ej_c.csv', 'w') as csvfile:
     #     w = csv.writer(csvfile, delimiter=',')
     #     w.writerow(["PASO DISCRETIZACION", "GRADIENTE DE PRESION", "VISCOSIDAD", "Y", "V"])
     #     for l in res:
     #         w.writerow(l)
-
-    for h in res:
-        print('\nh= '+str(h)+'\n')
-        print(res[h])
-        name= 'Sensibilidad h='+str(h)+'.csv'
-        res[h].to_csv(name)
+    
+    
+    
     return
 
 def analisis_experimental():
@@ -325,7 +325,7 @@ def analisis_experimental():
     return
 
 def main():
-    ej = ('C')
+    ej = ('A','C')
     ## A
     if "A" in ej:
         print('\n'+"-"*5+"Diferencias Finitas"+"-"*5+'\n')
