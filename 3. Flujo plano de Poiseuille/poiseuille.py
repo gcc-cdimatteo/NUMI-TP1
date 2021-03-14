@@ -299,7 +299,7 @@ def sensibilidad():
         name= 'Sensibilidad h='+str(h)+'.csv'
         res[h].to_csv(name)
         res[h].set_index('y').plot(figsize=(10,15),kind='line')
-        plt.show()
+        plt.savefig('Sensibilidad h='+str(h)+'.jpg')
     return
 
 def analisis_experimental():
