@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.show()
 import numpy as np
 import csv
 import os 
@@ -98,7 +99,7 @@ def imprimir_diferencias_finitas(res):
     return
 
 def diferencias_finitas(gradiente=HKEY_GRADIENTE_PRESION, viscosidad=HKEY_VISCOSIDAD, h=HKEY_PASOS_DISCRETIZACION):
-    gpsm= HKEY_GRADIENTE_PRESION/HKEY_VISCOSIDAD
+    gpsm= gradiente/viscosidad
     res = {}
     for paso_disc in h:
         res[paso_disc] = []
@@ -297,6 +298,8 @@ def sensibilidad():
         print(res[h])
         name= 'Sensibilidad h='+str(h)+'.csv'
         res[h].to_csv(name)
+        res[h].set_index('y').plot(figsize=(10,15),kind='line')
+        plt.show()
     return
 
 def analisis_experimental():
